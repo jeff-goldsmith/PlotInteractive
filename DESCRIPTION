@@ -1,0 +1,9 @@
+Package: PlotInteractive
+Title: Interactive plotting for functional data analyses
+Version: 0.1
+Authors@R: c(person("Jeff", "Goldsmith", role = "aut", email = "jeff.goldsmith@columbia.edu"), person("Julia", "Wrobel", role = c("aut", "cre"), email =
+    "jw3134@cumc.columbia.edu"))
+Description: Interactive plotting for functional data analyses
+Depends: R (>= 3.1.3)
+License: GPL (>= 2)
+LazyData: true
