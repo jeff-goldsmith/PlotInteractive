@@ -21,7 +21,7 @@
 #' library(refund)
 #' data(cd4)
 #' fpca.cd4 = fpca.sc(cd4, var=TRUE)
-#' plot_interactive.fpca(cd4)
+#' plot_interactive.fpca(fpca.cd4)
 #' 
 plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
   
