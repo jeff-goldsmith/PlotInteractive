@@ -79,7 +79,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                              which principal components explain the most variability in the data.")
                                     ),
                              column(9,
-                                    h4("Here are scree plots, bitchesssz"),
+                                    h4("Here are some scree plots"),
                                     plotOutput('scree1'), br(),
                                     plotOutput('scree2')
                              )                                                          
@@ -92,7 +92,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     plotOutput('muPCplot')
                              )
                     ),
-                    tabPanel("score extrema", h4("Here are scree plots, bitchesssz"))
+                    tabPanel("score extrema", h4("raisin raisin raisin raisin raisin"))
       )
       )
       
