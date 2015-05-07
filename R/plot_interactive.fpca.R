@@ -42,7 +42,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
   ##################
   # Tab 2 
   #################
-  lambda.dat <- as.data.frame(cbind(1:fpca.obj$npc,fpca.obj$evalues)); colnames(lambda.dat) <- c("k", "lambda")
+  scree <- as.data.frame(cbind(1:fpca.obj$npc,fpca.obj$evalues)); colnames(scree) <- c("k", "lambda")
   
   scree.cum = rep(NA, fpca.obj$npc) 
   for(i in 1:fpca.obj$npc){scree.cum[i] = sum(fpca.obj$evalues[1:i])/sum(fpca.obj$evalues)}
@@ -51,8 +51,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
   ##################
   # Tab 3 
   #################
-  dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
-  dat3 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
+  #dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
+  #dat3 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
   
   
   #################
@@ -92,7 +92,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     plotOutput('muPCplot')
                              )
                     ),
-                    tabPanel("score extrema", h4("raisin raisin raisin raisin raisin"))
+                    tabPanel("score extrema", h4("Pizza tastes better than Soylent"))
       )
       )
       
@@ -101,8 +101,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       
       ## use call statement outside of reactive to make list of input[[PC[i]]] thing? 
       mu = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu))
-      efunctions = fpca.obj$efunctions
-      sqrt.evalues = diag(sqrt(fpca.obj$evalues))
+      efunctions = fpca.obj$efunctions; sqrt.evalues = diag(sqrt(fpca.obj$evalues))
+      
+      test = efunctions %*% sqrt.evalues
+      
+      #fpca.obj$efunctions %*% diag(sqrt(fpca.obj$evalues))
       
       ############################
       # Reactive code for Tab 1
@@ -120,10 +123,19 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       # Reactive Code for Tab 3
       #############################   
       
+      dataInput2 <- reactive({
+        PCchoice = as.numeric(input$PCchoice)
+        #sqrt(fpca.obj$evalues[PCchoice])*fpca.obj$efunctions[,PCchoice])
+        
+        #sqrt.evalues[PCchoice]*efunctions[,PCchoice]
+        test[,PCchoice]
+        
+        #dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2()))
+        #as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-test[,PCchoice]))
+        
+        
       
-      #dataInput2 <- reactive({
-      #  sqrt(fpca.obj$evalues[PCnum])*fpca.obj$efunctions[,PCnum])
-      #})
+      })
       
       output$fpca_plot <- renderPlot(         
         
@@ -136,14 +148,15 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              labels = c("Mean", "Subject"))+ 
           theme(legend.key = element_blank())+
           ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))
-        ###################################################
-        
+        ################################################### 
       )
+      
       output$scree1 <- renderPlot(
-        ggplot(lambda.dat, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
+        ggplot(scree, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
           geom_point(size = 4, color = "black")+ theme_bw()+
           labs(list(title = "Scree Plot", x = "kth Principal Component", y = "Eigenvalue"))          
       )
+      
       output$scree2 <- renderPlot(
         ggplot(scree.cum, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
           geom_point(size = 4, color = "black")+theme_bw()+
@@ -153,17 +166,17 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       output$muPCplot <- renderPlot(
         ###############################################################
         
-        #dat2 = as.data.frame(cbind(d, fpca.obj$mu+sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
-        #dat3 = as.data.frame(cbind(d, fpca.obj$mu-sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
+        #dat2 = as.data.frame(cbind(d, fpca.obj$mu+sqrt(fpca.obj$evalues[input$PCchoice])*fpca.obj$efunctions[,input$PCchoice]))
+        #dat3 = as.data.frame(cbind(d, fpca.obj$mu-sqrt(fpca.obj$evalues[input$PCchoice])*fpca.obj$efunctions[,input$PCchoice]))
         
-        #dat2 = as.data.frame(cbind(d, fpca.obj$mu+dataInput2())
-        #dat3 = as.data.frame(cbind(d, fpca.obj$mu-dataInput2())
+        #dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2()))
+        #dat3 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-dataInput2()))
         
         
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=2)+theme_bw()+
-          geom_point(data=dat2,color = "blue", size = 5, shape = '+')+
-          geom_point(data=dat3, color = "red", size = 5, shape = "-")+
-          labs(list(title=bquote(psi[.(PCnum)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[PCnum]/sum(fpca.obj$evalues),3)) ~ "% Variance"), 
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2())),color = "blue", size = 5, shape = '+')+
+          #geom_point(data=dat3, color = "red", size = 5, shape = "-")+
+          labs(list(title=bquote(psi[.(input$PCchoice)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[PCnum]/sum(fpca.obj$evalues),3)) ~ "% Variance"), 
                     x = "Time", y = "Systolic Blood Pressure"))
         
         
