@@ -88,7 +88,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              column(3,
                                     selectInput("PCchoice", label = h3("Select PC"), choices = 1:fpca.obj$npc, selected = 1)
                              ),
-                             column(9, h4("some stuff goes here"),
+                             column(9, h4("some stuff goes here. make sure to fix plot title"),
                                     plotOutput('muPCplot')
                              )
                     ),
@@ -121,20 +121,10 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       
       #############################
       # Reactive Code for Tab 3
-      #############################   
-      
+      #############################         
       dataInput2 <- reactive({
         PCchoice = as.numeric(input$PCchoice)
-        #sqrt(fpca.obj$evalues[PCchoice])*fpca.obj$efunctions[,PCchoice])
-        
-        #sqrt.evalues[PCchoice]*efunctions[,PCchoice]
         test[,PCchoice]
-        
-        #dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2()))
-        #as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-test[,PCchoice]))
-        
-        
-      
       })
       
       output$fpca_plot <- renderPlot(         
@@ -165,22 +155,15 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       
       output$muPCplot <- renderPlot(
         ###############################################################
-        
-        #dat2 = as.data.frame(cbind(d, fpca.obj$mu+sqrt(fpca.obj$evalues[input$PCchoice])*fpca.obj$efunctions[,input$PCchoice]))
-        #dat3 = as.data.frame(cbind(d, fpca.obj$mu-sqrt(fpca.obj$evalues[input$PCchoice])*fpca.obj$efunctions[,input$PCchoice]))
-        
-        #dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2()))
-        #dat3 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-dataInput2()))
-        
-        
+                
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=2)+theme_bw()+
-          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2())),color = "blue", size = 5, shape = '+')+
-          #geom_point(data=dat3, color = "red", size = 5, shape = "-")+
-          labs(list(title=bquote(psi[.(input$PCchoice)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[PCnum]/sum(fpca.obj$evalues),3)) ~ "% Variance"), 
-                    x = "Time", y = "Systolic Blood Pressure"))
-        
-        
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+2*dataInput2())),color = "blue", size = 5, shape = '+')+
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-2*dataInput2())), color = "red", size = 5, shape = "-")+
+          scale_x_continuous(breaks=seq(0,length(fpca.obj$mu)-1, length=6), labels = paste0(c(0,0.2,0.4,0.6,0.8,1)))+
+          xlab(xlab)+ylab(ylab)
+         # ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ ","), paste(varpercent[input$PCchoice], "% Variance"))
         ###############################################################
+       # just fixing label now
         
       )
     }
