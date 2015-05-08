@@ -49,10 +49,10 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
   scree.cum <- as.data.frame(cbind(1:fpca.obj$npc,scree.cum)); colnames(scree.cum) <- c("k", "lambda")
   
   ##################
-  # Tab 3 
+  # Tab 4 
   #################
-  #dat2 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
-  #dat3 = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-sqrt(fpca.obj$evalues[1])*fpca.obj$efunctions[,1]))
+  rows = 1:dim(fpca.obj$score)[1]
+  scoreIDs = cbind(rows, fpca.obj$score)
   
   
   #################
@@ -63,7 +63,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
         tabsetPanel(type = "tabs",
                     tabPanel("score plot",
                              column(3,
-                                    h4("FPC Score Values"),
+                                    h3("FPC Score Values"),
                                     "[Sliders indicate FPC score values in SDs of the score distribution.]",
                                     hr(),
                                     eval(calls)
@@ -74,25 +74,40 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              )       
                     ),
                     tabPanel("scree plot", 
-                             column(3, h2("Scree Plots"), hr(),
+                             column(3, h3("Scree Plots"), hr(),
                                     helpText("Scree plots are displayed in the right panel. These plots are used to visualize
                                              which principal components explain the most variability in the data.")
                                     ),
                              column(9,
-                                    h4("Here are some scree plots"),
+                                    h4("Here are some scree plots"), h5("Scree Plot", align = "center"),
                                     plotOutput('scree1'), br(),
-                                    plotOutput('scree2')
+                                    h5("Scree Plot: Cumulative Variance", align = "center"), plotOutput('scree2')
                              )                                                          
                              ),
                     tabPanel("PC subtracted from mu plot", 
-                             column(3,
-                                    selectInput("PCchoice", label = h3("Select PC"), choices = 1:fpca.obj$npc, selected = 1)
+                             column(3, h3("Raisin 3"),
+                                    selectInput("PCchoice", label = h3("Select PC"), choices = 1:fpca.obj$npc, selected = 1),
+                                    hr(),
+                                    helpText("Solid black line indicates population mean. Blue and red lines indicate addition
+                                             and subtraction, respectively, of selected principal component from population mean.")
                              ),
-                             column(9, h4("some stuff goes here. make sure to fix plot title"),
+                             column(9, h4("Raisin is a Mountain Poodle"),
                                     plotOutput('muPCplot')
                              )
                     ),
-                    tabPanel("score extrema", h4("Pizza tastes better than Soylent"))
+                    tabPanel("score extrema",
+                             column(3, h3("Titley-title"),
+                                    selectInput("PCchoice2", label = h3("Select PC"), choices = 1:fpca.obj$npc, selected = 1),
+                                    hr(),
+                                    helpText("Yhat values for two individuals with the smallest scores for the selected principal
+                                            component are represented by the red curves. Yhat values for two individuals
+                                            with the largest scores for the selected PC are represented by the blue curves.")
+                                    ),
+                             column(9, h4("Pizza tastes better than Soylent"),
+                                    h5("Most extreme individuals for given PC", align = "center"), plotOutput("extrema1"),
+                                    h5("Second most extreme individuals for given PC", align = "center"), plotOutput("extrema2")
+                                    )
+                             )
       )
       )
       
@@ -103,7 +118,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       mu = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu))
       efunctions = fpca.obj$efunctions; sqrt.evalues = diag(sqrt(fpca.obj$evalues))
       
-      test = efunctions %*% sqrt.evalues
+      scaled_efunctions = efunctions %*% sqrt.evalues
       
       #fpca.obj$efunctions %*% diag(sqrt(fpca.obj$evalues))
       
@@ -124,8 +139,23 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       #############################         
       dataInput2 <- reactive({
         PCchoice = as.numeric(input$PCchoice)
-        test[,PCchoice]
+        scaled_efunctions[,PCchoice]
       })
+      
+      ##################################
+      # Reactive Code for Tab 4
+      #################################
+      dataInput3 <- reactive({
+        PCchoice2 = as.numeric(input$PCchoice2)
+        minIDs = scoreIDs[order(scoreIDs[,(PCchoice2+1)]),][1:2,1]
+        maxIDs = scoreIDs[order(-scoreIDs[,(PCchoice2+1)]),][1:2,1]
+        
+        as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$Yhat[minIDs[1],], fpca.obj$Yhat[minIDs[2],],
+                            fpca.obj$Yhat[maxIDs[1],], fpca.obj$Yhat[maxIDs[2],]))
+        
+        
+      })      
+      
       
       output$fpca_plot <- renderPlot(         
         
@@ -143,28 +173,45 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       
       output$scree1 <- renderPlot(
         ggplot(scree, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
-          geom_point(size = 4, color = "black")+ theme_bw()+
-          labs(list(title = "Scree Plot", x = "kth Principal Component", y = "Eigenvalue"))          
+          geom_point(size = 4, color = "black")+ theme_bw()+ xlab("kth Principal Component")+ylab("Eigenvalue")
       )
       
       output$scree2 <- renderPlot(
         ggplot(scree.cum, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
-          geom_point(size = 4, color = "black")+theme_bw()+
-          labs(list(title = "Scree Plot: Cumulative Variance", x = "kth Principal Component", y = "proportion of variance explained"))          
-      )
+          geom_point(size = 4, color = "black")+theme_bw()+xlab("kth Principal Component")+ylab("proportion of variance explained")
+       )
       
       output$muPCplot <- renderPlot(
         ###############################################################
                 
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=2)+theme_bw()+
-          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+2*dataInput2())),color = "blue", size = 5, shape = '+')+
-          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-2*dataInput2())), color = "red", size = 5, shape = "-")+
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+2*dataInput2())),color = "blue", size = 8, shape = '+')+
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-2*dataInput2())), color = "red", size = 8, shape = "-")+
           scale_x_continuous(breaks=seq(0,length(fpca.obj$mu)-1, length=6), labels = paste0(c(0,0.2,0.4,0.6,0.8,1)))+
-          xlab(xlab)+ylab(ylab)
-         # ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ ","), paste(varpercent[input$PCchoice], "% Variance"))
+          xlab(xlab)+ylab(ylab)+ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))+
+          ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," 
+                         ~.(100*round(fpca.obj$evalues[as.numeric(input$PCchoice)]/sum(fpca.obj$evalues),3)) ~ "% Variance"))
+          
         ###############################################################
-       # just fixing label now
-        
+       # just fixing label now       
+      )
+      
+      output$extrema1 <- renderPlot(
+        ######################################################################################################
+        ggplot(data=dataInput3(), aes(x=V1,y=V2))+theme_bw()+
+          scale_x_continuous(breaks=seq(0,length(fpca.obj$mu)-1, length=6), labels = paste0(c(0,0.2,0.4,0.6,0.8,1)))+
+          geom_line(size=2, color = "red")+geom_line(data = dataInput3(), aes(x=V1, y=V4), size=2, color = "blue")+
+          xlab(xlab)+ylab(ylab)+ ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))
+        #####################################################################################################################
+        )
+      
+      output$extrema2 <- renderPlot(
+        ######################################################################################################
+        ggplot(data=dataInput3(), aes(x=V1,y=V3))+theme_bw()+
+          scale_x_continuous(breaks=seq(0,length(fpca.obj$mu)-1, length=6), labels = paste0(c(0,0.2,0.4,0.6,0.8,1)))+
+          geom_line(size=2, color = "red")+geom_line(data = dataInput3(), aes(x=V1, y=V5), size=2, color = "blue")+
+          xlab(xlab)+ylab(ylab)+ ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))
+        #####################################################################################################################
       )
     }
   )
