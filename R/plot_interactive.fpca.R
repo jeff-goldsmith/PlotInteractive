@@ -24,7 +24,7 @@
 #' plot_interactive.fpca(fpca.cd4)
 #' 
 plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
-  #################
+  ################
   # Tab 1
   ################
   varpercent = lapply(fpca.obj$evalues, function(i){100*round(i/sum(fpca.obj$evalues),3)}) # calculates percent variance explained
@@ -39,7 +39,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
     
     PCs[i] = PCnum
   }  
-  ##################
+  #################
   # Tab 2 
   #################
   scree <- as.data.frame(cbind(1:fpca.obj$npc,fpca.obj$evalues)); colnames(scree) <- c("k", "lambda")
@@ -48,17 +48,16 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
   for(i in 1:fpca.obj$npc){scree.cum[i] = sum(fpca.obj$evalues[1:i])/sum(fpca.obj$evalues)}
   scree.cum <- as.data.frame(cbind(1:fpca.obj$npc,scree.cum)); colnames(scree.cum) <- c("k", "lambda")
   
-  ##################
+  #################
   # Tab 4 
   #################
   rows = 1:dim(fpca.obj$score)[1]
   scoreIDs = cbind(rows, fpca.obj$score)
   
-  
   #################
   shinyApp(
     ui = fluidPage(
-      h3("Interactive plot of FPCA"),
+      h2("Interactive plot of FPCA"),
       fluidRow(
         tabsetPanel(type = "tabs",
                     tabPanel("score plot",
@@ -114,23 +113,17 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
     ),
     server = function(input, output) {
       
-      ## use call statement outside of reactive to make list of input[[PC[i]]] thing? 
       mu = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu))
-      efunctions = fpca.obj$efunctions; sqrt.evalues = diag(sqrt(fpca.obj$evalues))
-      
+      efunctions = fpca.obj$efunctions; sqrt.evalues = diag(sqrt(fpca.obj$evalues))      
       scaled_efunctions = efunctions %*% sqrt.evalues
-      
-      #fpca.obj$efunctions %*% diag(sqrt(fpca.obj$evalues))
       
       ############################
       # Reactive code for Tab 1
       ############################
       dataInput <- reactive({
-        ## use an apply function here to make the code cleaner
         PCweights = rep(NA, length(PCs))
-        for(i in 1:length(PCs)){
-          PCweights[i] = input[[PCs[i]]]
-        }
+        for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
+        
         as.data.frame(cbind(1:length(fpca.obj$mu), as.matrix(fpca.obj$mu)+efunctions %*% sqrt.evalues %*% PCweights ))
       })
       
@@ -147,27 +140,20 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       #################################
       dataInput3 <- reactive({
         PCchoice2 = as.numeric(input$PCchoice2)
-        minIDs = scoreIDs[order(scoreIDs[,(PCchoice2+1)]),][1:2,1]
-        maxIDs = scoreIDs[order(-scoreIDs[,(PCchoice2+1)]),][1:2,1]
+        minIDs = scoreIDs[order(scoreIDs[,(PCchoice2+1)]),][1:2,1]; maxIDs = scoreIDs[order(-scoreIDs[,(PCchoice2+1)]),][1:2,1]
         
         as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$Yhat[minIDs[1],], fpca.obj$Yhat[minIDs[2],],
                             fpca.obj$Yhat[maxIDs[1],], fpca.obj$Yhat[maxIDs[2],]))
-        
-        
       })      
-      
-      
-      output$fpca_plot <- renderPlot(         
-        
+            
+      output$fpca_plot <- renderPlot(       
         ############################################################
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=2, aes( color= "mu"))+theme_bw()+
           scale_x_continuous(breaks=seq(0,length(fpca.obj$mu)-1, length=6), labels = paste0(c(0,0.2,0.4,0.6,0.8,1)))+
-          geom_line(data=dataInput(),lwd = 1.5, aes(color = "subject"))+
-          xlab(xlab)+ylab(ylab)+ggtitle(title)+
+          geom_line(data=dataInput(),lwd = 1.5, aes(color = "subject"))+xlab(xlab)+ylab(ylab)+ggtitle(title)+
           scale_color_manual("Line Legend", values = c(mu = "cornflowerblue", subject = "lightcoral"),
                              labels = c("Mean", "Subject"))+ 
-          theme(legend.key = element_blank())+
-          ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))
+          theme(legend.key = element_blank())+ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))
         ################################################### 
       )
       
@@ -182,8 +168,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
        )
       
       output$muPCplot <- renderPlot(
-        ###############################################################
-                
+        ###############################################################           
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=2)+theme_bw()+
           geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+2*dataInput2())),color = "blue", size = 8, shape = '+')+
           geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-2*dataInput2())), color = "red", size = 8, shape = "-")+
@@ -191,9 +176,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
           xlab(xlab)+ylab(ylab)+ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))+
           ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," 
                          ~.(100*round(fpca.obj$evalues[as.numeric(input$PCchoice)]/sum(fpca.obj$evalues),3)) ~ "% Variance"))
-          
-        ###############################################################
-       # just fixing label now       
+        ###############################################################      
       )
       
       output$extrema1 <- renderPlot(
