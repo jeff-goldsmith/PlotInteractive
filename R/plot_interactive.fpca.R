@@ -63,8 +63,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
     ui = navbarPage(title = strong(style = "color: #6500FF; ", "PlotInteractive"), windowTitle = "PlotInteractive", 
                     collapsible = FALSE, id = "nav",
                     inverse = TRUE, header = header_style,
-                    tabPanel("score plot", icon = icon("stats", lib = "glyphicon"),
-                             withMathJax(),
+                    tabPanel("score plot", 
                              column(3,
                                     h3("FPC Score Values"),
                                     "[Sliders indicate FPC score values in SDs of the score distribution.]",
@@ -75,18 +74,27 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     h4("Mean and Fitted Curve Given Scores"), 
                                     plotOutput('fpca_plot')
                              )
-                    ),
-                    tabPanel("scree plot", icon = icon("medkit"),
-                             column(3, h3("Scree Plots"), hr(),
-                                    helpText("Scree plots are displayed in the right panel. These plots are used to visualize
+                    ), ## end Tab 1
+                    tabPanel("scree plot", 
+                             fluidPage(
+                              column(6,  h4("Scree Plot", align = "center"),
+                                      plotOutput('scree1')
+                                      
+                                      ),
+                              column(6, h4("Scree Plot: Cumulative Variance", align = "center"), plotOutput('scree2')
+                                    ) ,
+                              
+                              fluidRow( 
+                                column(4, br(), hr(),
+                                  h3("Scree Plots"),  
+                                  helpText("Scree plots are displayed in the panels above. These plots are used to visualize
                                              which principal components explain the most variability in the data.")
-                                    ),
-                             column(9,
-                                    h4("Here are some scree plots"), h5("Scree Plot", align = "center"),
-                                    plotOutput('scree1'), br(),
-                                    h5("Scree Plot: Cumulative Variance", align = "center"), plotOutput('scree2')
-                             )     
-                             ),
+                                      ),
+                                column(8, br(), h3("put download button here for downloading scree plots")
+                                       )
+                                        ) ## end fluidRow
+                                      ) ## end fluidPage
+                             ), ## end Tab 2
                     tabPanel("PC subtracted from mu plot",
                              column(3, h3("Raisin 3"),
                                     selectInput("PCchoice", label = h3("Select PC"), choices = 1:fpca.obj$npc, selected = 1),
@@ -97,7 +105,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              column(9, h4("Raisin is a Mountain Poodle"),
                                     plotOutput('muPCplot')
                              )
-                             ),
+                             ), ## end Tab 3
                     tabPanel("score extrema",
                              column(3, h3("Titley-title"),
                                     selectInput("PCchoice2", label = h3("Select PC"), choices = 1:fpca.obj$npc, selected = 1),
@@ -111,7 +119,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     h5("Second most extreme individuals for given PC", align = "center"), plotOutput("extrema2")
                              )
                                     )
-                    ),
+                    ), ## end Tab 4
     server = function(input, output){
       
       mu = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu))
@@ -203,7 +211,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
         #####################################################################################################################
       )
       
-    } 
+    } ## end server
     )
 }
 
