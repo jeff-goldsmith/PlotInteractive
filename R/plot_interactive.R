@@ -15,13 +15,11 @@
 #' library(refund)
 #' 
 #' data(cd4)
-#' fpca.cd4 = fpca.sc(cd4, var=TRUE)
-#' class(fpca.cd4) = "fpca"
+#' fpca.cd4 = fpca(cd4, var=TRUE)
 #' plot_interactive(fpca.cd4)
 #' 
 #' data(DTI)
-#' fpca.dti = fpca.sc(DTI$cca)
-#' class(fpca.dti) = "fpca"
+#' fpca.dti = fpca(DTI$cca)
 #' plot_interactive(fpca.dti)
 #' 
 #' 

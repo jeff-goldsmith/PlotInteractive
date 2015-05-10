@@ -12,7 +12,7 @@
 #' Jeff Goldsmith \email{jeff.goldsmith@@columbia.edu} 
 #' 
 #' @seealso \code{\link{plot.interactive}}
-#' @import shiny (>= 0.11.1)
+#' @import shiny
 #' @import ggplot2
 #' @export
 #' 
@@ -20,7 +20,7 @@
 #' 
 #' library(refund)
 #' data(cd4)
-#' fpca.cd4 = fpca.sc(cd4, var=TRUE)
+#' fpca.cd4 = fpca(cd4, var=TRUE)
 #' plot_interactive.fpca(fpca.cd4)
 #' 
 
@@ -81,7 +81,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              column(3, hr(),
                                     helpText("Scree plots are displayed to the right. The first panel shows the plot of eigenvalues, and the second plot shows the cumulative percent variance explained.")
                                     ),
-                             column(9,
+                             column(9, h4("Scree Plots"), 
                                     plotOutput('scree')
                              )     
                              ),
@@ -90,7 +90,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     selectInput("PCchoice", label = h4("Select FPC"), choices = 1:fpca.obj$npc, selected = 1),
                                     hr(),
                                     helpText("Solid black line indicates population mean. For the selected FPC, blue and red lines 
-                                             indicate the populations mean +/- the FPC times the square root of the associated eigenvalue .")
+                                             indicate the populations mean +/- the FPC times 2 SDs of the associated score distribution.")
                                     ),
                              column(9, h4("Mean and FPCs"),
                                     plotOutput('muPCplot')
@@ -100,8 +100,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              column(3,
                                     selectInput("PCchoice2", label = h4("Select PC"), choices = 1:fpca.obj$npc, selected = 1),
                                     hr(),
-                                    helpText("Obsered data and fitted values for the curves with the smallest and largest scores 
-                                              for the selected principal.")
+                                    helpText("Observed data and fitted values for the curves with the smallest and largest scores 
+                                              for the selected principal component.")
                                     ),
                              column(9, h4("Subjects with extreme score values"),
                                     plotOutput("extrema1")
@@ -161,15 +161,15 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       output$scree <- renderPlot(
         ggplot(scree, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
           geom_point(size = 4, color = "black")+ theme_bw() + xlab("Principal Component") + ylab("") +
-          facet_wrap(~type, scales = "free_y")
+          facet_wrap(~type, scales = "free_y") + ylim(0, NA)
       )
       
       ## Tab 3 plot
       output$muPCplot <- renderPlot(
         ###############################################################           
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=1)+theme_bw()+
-          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+dataInput2())),color = "blue", size = 4, shape = '+')+
-          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-dataInput2())), color = "red", size = 4, shape = "-")+
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu+2*dataInput2())),color = "blue", size = 4, shape = '+')+
+          geom_point(data=as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu-2*dataInput2())), color = "red", size = 4, shape = "-")+
           scale_x_continuous(breaks=seq(0,length(fpca.obj$mu)-1, length=6), labels = paste0(c(0,0.2,0.4,0.6,0.8,1)))+
           xlab(xlab)+ylab(ylab)+ylim(c(range(fpca.obj$Yhat)[1],range(fpca.obj$Yhat)[2]))+
           ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," 
