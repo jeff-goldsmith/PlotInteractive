@@ -6,7 +6,7 @@
 ##'
 ##' This function copies \code{fpca.sc} in the \code{refund} package, with minor
 ##' tweaks to facilitate plotting. See that function for more details.
-##'
+##' 
 ##' @param Y,ydata the user must supply either \code{Y}, a matrix of functions
 ##' observed on a regular grid, or a data frame \code{ydata} representing
 ##' irregularly observed functions. See Details.
@@ -291,8 +291,8 @@ fpca <- function(Y=NULL, ydata = NULL, Y.pred=NULL, argvals = NULL, random.int =
 
     ret.objects = c("Yhat", "Y", "scores", "mu", "efunctions", "evalues", "npc")
     if (var) {
-        ret.objects = c(ret.objects, "sigma2", "diag.var", "VarMats")
-        if (simul) ret.objects = c(ret.objects, "crit.val")
+      ret.objects = c(ret.objects, "sigma2", "diag.var", "VarMats")
+      if (simul) ret.objects = c(ret.objects, "crit.val")
     }
     ret = lapply(1:length(ret.objects), function(u) get(ret.objects[u]))
     names(ret) = ret.objects

@@ -2,7 +2,7 @@
 % Please edit documentation in R/plot_interactive.fpca.R
 \name{plot_interactive.fpca}
 \alias{plot_interactive.fpca}
-\title{Interactive Plotting for Functional Principal Components Analysis}
+\title{Interactive Plotting for Functional Principal Component Analysis}
 \usage{
 \method{plot_interactive}{fpca}(fpca.obj, xlab = "", ylab = "",
   title = "")
@@ -17,7 +17,7 @@
 \item{title}{plot title}
 }
 \description{
-Produces an interactive plot illustrating a functional principal components
+Produces an interactive plot illustrating a functional principal component
 analysis.
 }
 \examples{
