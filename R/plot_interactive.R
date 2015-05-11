@@ -18,10 +18,16 @@
 #' fpca.cd4 = fpca(cd4, var=TRUE)
 #' plot_interactive(fpca.cd4)
 #' 
-#' data(DTI)
-#' fpca.dti = fpca(DTI$cca)
-#' plot_interactive(fpca.dti)
 #' 
+#' 
+#' data(DTI)
+#' DTI = subset(DTI, select = c(cca, case, pasat))
+#' DTI = DTI[complete.cases(DTI),]
+#' DTI$gender = sample(c(0,1), dim(DTI)[1], replace = TRUE)
+#' 
+#' fosr.dti = fosr_gls(cca ~ pasat + gender, data = DTI)
+#' 
+#' plot_interactive(fosr.dti)
 #' 
 plot_interactive <- function(x, ...){
   UseMethod("plot_interactive")

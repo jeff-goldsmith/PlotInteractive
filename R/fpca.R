@@ -5,7 +5,9 @@
 ##' variance estimates.
 ##'
 ##' This function copies \code{fpca.sc} in the \code{refund} package, with minor
-##' tweaks to facilitate plotting. See that function for more details.
+##' tweaks to facilitate plotting. See that function for more details. (Also,
+##' there was a scoping issue for this function with the argument \code{nbasis};
+##' rather than figuring that out, I just set this to 10 everywhere.)
 ##' 
 ##' @param Y,ydata the user must supply either \code{Y}, a matrix of functions
 ##' observed on a regular grid, or a data frame \code{ydata} representing
@@ -17,8 +19,6 @@
 ##' \code{\link[gamm4]{gamm4}} with random intercepts. If \code{FALSE} (the
 ##' default), the mean is estimated by \code{\link[mgcv]{gam}} treating all the
 ##' data as independent.
-##' @param nbasis number of B-spline basis functions used for estimation of the
-##' mean function and bivariate smoothing of the covariance surface.
 ##' @param pve proportion of variance explained: used to choose the number of
 ##' principal components.
 ##' @param npc prespecified value for the number of principal components (if
@@ -140,7 +140,7 @@
 ##' @importFrom gamm4 gamm4
 ## npc=1 seems to give error
 fpca <- function(Y=NULL, ydata = NULL, Y.pred=NULL, argvals = NULL, random.int = FALSE,
-         nbasis = 10, pve = .99, npc = NULL, var = FALSE, simul = FALSE, sim.alpha = .95,
+         pve = .99, npc = NULL, var = FALSE, simul = FALSE, sim.alpha = .95,
          useSymm = FALSE, makePD = FALSE, center=TRUE, cov.est.method = 2,
          integration="trapezoidal") {
 
@@ -167,8 +167,8 @@ fpca <- function(Y=NULL, ydata = NULL, Y.pred=NULL, argvals = NULL, random.int =
     id = rep(1:I, rep(D, I))
 
     if (center) {
-        if (random.int) gam0 = gamm4(as.vector(Y) ~ s(d.vec, k = nbasis), random=~(1|id))$gam
-        else gam0 = gam(as.vector(Y) ~ s(d.vec, k = nbasis))
+        if (random.int) gam0 = gamm4(as.vector(Y) ~ s(d.vec, k = 10), random=~(1|id))$gam
+        else gam0 = gam(as.vector(Y) ~ s(d.vec, k = 10))
         mu = predict(gam0, newdata = data.frame(d.vec = argvals))
         Y.tilde = Y - matrix(mu, I, D, byrow = TRUE)
     }
@@ -190,7 +190,7 @@ fpca <- function(Y=NULL, ydata = NULL, Y.pred=NULL, argvals = NULL, random.int =
         if (!useSymm) {
             row.vec = rep(argvals, each = D)
             col.vec = rep(argvals, D)
-            npc.0 = matrix(predict(gam(as.vector(G.0) ~ te(row.vec, col.vec, k = nbasis), weights =as.vector(cov.count)), newdata = data.frame(row.vec = row.vec,col.vec = col.vec)), D, D)
+            npc.0 = matrix(predict(gam(as.vector(G.0) ~ te(row.vec, col.vec, k = 10), weights =as.vector(cov.count)), newdata = data.frame(row.vec = row.vec,col.vec = col.vec)), D, D)
             npc.0 = (npc.0 + t(npc.0))/2
         }
         else {
@@ -203,7 +203,7 @@ fpca <- function(Y=NULL, ydata = NULL, Y.pred=NULL, argvals = NULL, random.int =
             vG.0 <- as.vector(G.0)[use]
             row.vec <- rep(argvals, each = D)[use]
             col.vec <- rep(argvals, times = D)[use]
-            mCov <- gam(vG.0 ~ te(row.vec, col.vec, k = nbasis), weights = usecov.count)
+            mCov <- gam(vG.0 ~ te(row.vec, col.vec, k = 10), weights = usecov.count)
             npc.0 <- matrix(NA, D, D)
             spred <- rep(argvals, each = D)[upper.tri(npc.0, diag = TRUE)]
             tpred <- rep(argvals, times = D)[upper.tri(npc.0, diag = TRUE)]
@@ -229,7 +229,7 @@ fpca <- function(Y=NULL, ydata = NULL, Y.pred=NULL, argvals = NULL, random.int =
         }
         row.vec.pred = rep(argvals, each = D)
         col.vec.pred = rep(argvals, D)
-        npc.0 = matrix(predict(gam(G.0.vec ~ te(row.vec, col.vec, k = nbasis)), newdata = data.frame(row.vec = row.vec.pred, col.vec = col.vec.pred)), D, D)
+        npc.0 = matrix(predict(gam(G.0.vec ~ te(row.vec, col.vec, k = 10)), newdata = data.frame(row.vec = row.vec.pred, col.vec = col.vec.pred)), D, D)
         npc.0 = (npc.0 + t(npc.0))/2
         G.0 = ifelse(cov.count == 0, NA, cov.sum/cov.count)
         diag.G0 = diag(G.0)

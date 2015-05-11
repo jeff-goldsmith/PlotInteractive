@@ -21,9 +21,16 @@ data(cd4)
 fpca.cd4 = fpca(cd4, var=TRUE)
 plot_interactive(fpca.cd4)
 
+
+
 data(DTI)
-fpca.dti = fpca(DTI$cca)
-plot_interactive(fpca.dti)
+DTI = subset(DTI, select = c(cca, case, pasat))
+DTI = DTI[complete.cases(DTI),]
+DTI$gender = sample(c(0,1), dim(DTI)[1], replace = TRUE)
+
+fosr.dti = fosr_gls(cca ~ pasat + gender, data = DTI)
+
+plot_interactive(fosr.dti)
 }
 \author{
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu},

@@ -5,10 +5,9 @@
 \title{Functional principal components analysis by smoothed covariance}
 \usage{
 fpca(Y = NULL, ydata = NULL, Y.pred = NULL, argvals = NULL,
-  random.int = FALSE, nbasis = 10, pve = 0.99, npc = NULL,
-  var = FALSE, simul = FALSE, sim.alpha = 0.95, useSymm = FALSE,
-  makePD = FALSE, center = TRUE, cov.est.method = 2,
-  integration = "trapezoidal")
+  random.int = FALSE, pve = 0.99, npc = NULL, var = FALSE,
+  simul = FALSE, sim.alpha = 0.95, useSymm = FALSE, makePD = FALSE,
+  center = TRUE, cov.est.method = 2, integration = "trapezoidal")
 }
 \arguments{
 \item{Y,ydata}{the user must supply either \code{Y}, a matrix of functions
@@ -24,9 +23,6 @@ the FPC decomposition.}
 \code{\link[gamm4]{gamm4}} with random intercepts. If \code{FALSE} (the
 default), the mean is estimated by \code{\link[mgcv]{gam}} treating all the
 data as independent.}
-
-\item{nbasis}{number of B-spline basis functions used for estimation of the
-mean function and bivariate smoothing of the covariance surface.}
 
 \item{pve}{proportion of variance explained: used to choose the number of
 principal components.}
@@ -85,7 +81,9 @@ variance estimates.
 }
 \details{
 This function copies \code{fpca.sc} in the \code{refund} package, with minor
-tweaks to facilitate plotting. See that function for more details.
+tweaks to facilitate plotting. See that function for more details. (Also,
+there was a scoping issue for this function with the argument \code{nbasis};
+rather than figuring that out, I just set this to 10 everywhere.)
 }
 \examples{
 \dontrun{
