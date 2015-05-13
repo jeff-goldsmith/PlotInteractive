@@ -37,7 +37,7 @@ DTI = DTI[complete.cases(DTI),]
 DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
 DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 
-fosr.dti = fosr_gls(cca ~ pasat + gender + status, data = DTI)
+fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 }
 \author{
 Jeff Goldsmith \email{ajg2202@cumc.columbia.edu}

@@ -32,7 +32,7 @@
 #' DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
 #' DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 #' 
-#' fosr.dti = fosr_gls(cca ~ pasat + gender + status, data = DTI)
+#' fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 #' 
 fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs"){
   

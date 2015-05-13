@@ -16,21 +16,24 @@ Generic function for interactive plotting of functional data analysis results
 }
 \examples{
 library(refund)
+library(dplyr)
+
+##### FPCA Example #####
 
 data(cd4)
 fpca.cd4 = fpca(cd4, var=TRUE)
 plot_interactive(fpca.cd4)
 
 
+##### FPCA Example #####
 
 data(DTI)
 DTI = subset(DTI, select = c(cca, case, pasat))
 DTI = DTI[complete.cases(DTI),]
-DTI$gender = sample(c(0,1), dim(DTI)[1], replace = TRUE)
+DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
+DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 
-fosr.dti = fosr_gls(cca ~ pasat + gender, data = DTI)
-
-plot_interactive(fosr.dti)
+fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 }
 \author{
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu},
