@@ -52,8 +52,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
   
   ## Tab 4: extreme subjects
   
-  rows = 1:dim(fpca.obj$score)[1]
-  scoreIDs = cbind(rows, fpca.obj$score)
+  
+  x = 1:100  
+  y = x
+  #rows = 1:dim(fpca.obj$score)[1]
+  #scoreIDs = cbind(rows, fpca.obj$score)
   
   #################################
   ## App
@@ -101,15 +104,18 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       plotOutput('fpca_plot')
                                     )
                              ),
-                    tabPanel("Score Extrema",
+                    tabPanel("Individual Subject",
                              column(3,
-                                      selectInput("PCchoice2", label = h4("Select PC"), choices = 1:fpca.obj$npc, selected = 1),
+                                      selectInput("subject", label = h4("Select Subject"), choices = 1:dim(fpca.obj$Yhat)[1], selected =1),
                                       hr(),
-                                      helpText("Observed data and fitted values for the curves with the smallest and largest scores 
-                                                for the selected principal component.")
+                                      helpText("Use the drop down menu to select a subject. Plot shows observed data and fitted values 
+                                               for the selected subject.")
                                     ),
-                             column(9, h4("Subjects with extreme score values"),
-                                      plotOutput("extrema")
+                             
+                             
+                             column(9, h4("Fitted and Observed Values for Selected Subject"),
+                                      plotOutput("subjectPlot")
+                                    
                                     )
                              )
                     ),
@@ -143,10 +149,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       ## Reactive Code for Tab 4
 
       dataInput3 <- reactive({
-        PCchoice2 = as.numeric(input$PCchoice2)
-        minIDs = scoreIDs[order(scoreIDs[,(PCchoice2+1)]),][1:2,1]; maxIDs = scoreIDs[order(-scoreIDs[,(PCchoice2+1)]),][1:2,1]
-        as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[minIDs[1],], fpca.obj$Yhat[maxIDs[1],],
-                            fpca.obj$Y[minIDs[1],], fpca.obj$Y[maxIDs[1],]))
+        subjectnum = as.numeric(input$subject)
+        as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[subjectnum,], fpca.obj$Y[subjectnum,]))
       })      
       
       
@@ -177,17 +181,14 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       )
             
       ## Tab 4 plots
-      output$extrema <- renderPlot(
-        ggplot(data = dataInput3(), aes(x=V1,y=V2)) + geom_line(lwd=1) + theme_bw() +
+      output$subjectPlot <- renderPlot(  
+        ggplot(data = dataInput3(), aes(x=V1,y=V2)) + geom_line(lwd=0.5, color = "gray") + theme_bw() +
           scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
           geom_line(data = dataInput3(), aes(y=V3), size=1, color = "blue") +
-          geom_line(data = dataInput3(), aes(y=V4), size=1, color = "red")+
-          geom_point(data = dataInput3(), aes(y=V5), color = "blue") +
-          geom_point(data = dataInput3(), aes(y=V6), color = "red")+
+          geom_point(data = dataInput3(), aes(y=V4), color = "blue") +
           xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
       )
-      
-      
+         
       
     } ## end server
     )
