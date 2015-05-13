@@ -75,7 +75,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                     inverse = TRUE, header = NULL,
                     tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
                              column(3,
-                                    h4("Predictor values"),
+                                    h4("Predictor Values"),
                                     eval(calls),
                                     hr(),
                                     helpText("Use inputs to select predictor values; a fitted response curve for a subject with those values is
@@ -122,6 +122,8 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
         reassign = function(var, newdata){
           if(is.numeric(fosr.obj$data[,var])){ 
             var.value = as.numeric(newdata[var]) 
+#          } else if(is.factor(fosr.obj$data[,var]) & length(levels(fosr.obj$data[,var])) <=2){ 
+#            var.value = factor(levels(fosr.obj$data[,var])[newdata[var]+1], levels = levels(fosr.obj$data[,var])) 
           } else if(is.factor(fosr.obj$data[,var])){ 
             var.value = factor(newdata[var], levels = levels(fosr.obj$data[,var])) 
           }
