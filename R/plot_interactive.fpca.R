@@ -113,10 +113,19 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                                for the selected subject.")
                                     ),
                              
-                             
+
                              column(9, h4("Fitted and Observed Values for Selected Subject"),
                                       plotOutput("subjectPlot")
-                                    
+                                    )
+                             ),
+                    tabPanel("Data Potato",
+                             column(3, selectInput("PCX", label = h4("Select X-axis FPC"), choices = 1:fpca.obj$npc, selected = 1), hr(),
+                                    selectInput("PCY", label = h4("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2),
+                                    helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
+                                             distrbution for selected FPCs.")
+                                    ),
+                             column(9, h4("Score Distribution for Selected FPCs"),
+                                      plotOutput("DataPotato")
                                     )
                              )
                     ),
@@ -139,7 +148,6 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       })
 
       plotInput <- reactive({
-        #dI1 <- dataInput()
         p1 <- ggplot(mu, aes(x = V1, y = V2)) + geom_line(lwd=1) + theme_bw() +
           geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu + 2*dataInput())), color = "blue", size = 4, shape = '+')+
           geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu - 2*dataInput())), color = "red", size = 4, shape = "-")+
@@ -164,6 +172,25 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
         as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[subjectnum,], fpca.obj$Y[subjectnum,]))
       })      
       
+      ## Reactive Code for Tab 5
+      dataInput <- reactive({
+        PCchoice = as.numeric(input$PCchoice)
+        scaled_efunctions[,PCchoice]
+      })
+      
+      dataInput5 <- reactive({
+        PCY = as.numeric(input$PCY)
+        PCX = as.numeric(input$PCX)
+        
+        as.data.frame(cbind(fpca.obj$scores[,PCX], fpca.obj$scores[, PCY]))
+      })
+      
+      plotInput5 <- reactive({
+        df <- dataInput5()
+        p5 <- ggplot(df, aes(x = V1, y = V2))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
+          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))
+        
+      })
       
       ## Tab 1 plot and download
       output$muPCplot <- renderPlot(
@@ -211,6 +238,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
           geom_point(data = dataInput3(), aes(y=V4), color = "blue") +
           xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
       )
+      
+      ## Tab 5 Plot
+      output$DataPotato <- renderPlot(
+        print(plotInput5())
+        )
          
       
     } ## end server
