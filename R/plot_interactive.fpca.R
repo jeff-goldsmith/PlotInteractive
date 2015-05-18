@@ -76,7 +76,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     selectInput("PCchoice", label = h4("Select FPC"), choices = 1:fpca.obj$npc, selected = 1),
                                     hr(),
                                     helpText("Solid black line indicates population mean. For the selected FPC, blue and red lines 
-                                             indicate the populations mean +/- the FPC times 2 SDs of the associated score distribution.")
+                                             indicate the populations mean +/- the FPC times 2 SDs of the associated score distribution."),
+                                    hr(), downloadButton('downloadmuPCPlot', 'Download Plot')
                                     ),
                              column(9, h4("Mean and FPCs"),
                                     plotOutput('muPCplot')
@@ -130,18 +131,28 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       efunctions = fpca.obj$efunctions; sqrt.evalues = diag(sqrt(fpca.obj$evalues))      
       scaled_efunctions = efunctions %*% sqrt.evalues
       
-      ## Reactive Code for Tab 2
+      ## Reactive Code for Tab 1 
 
-      dataInput2 <- reactive({
+      dataInput <- reactive({
         PCchoice = as.numeric(input$PCchoice)
         scaled_efunctions[,PCchoice]
       })
-      
+
+      plotInput <- reactive({
+        #dI1 <- dataInput()
+        p1 <- ggplot(mu, aes(x = V1, y = V2)) + geom_line(lwd=1) + theme_bw() +
+          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu + 2*dataInput())), color = "blue", size = 4, shape = '+')+
+          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu - 2*dataInput())), color = "red", size = 4, shape = "-")+
+          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
+          xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))+
+          ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[as.numeric(input$PCchoice)]/sum(fpca.obj$evalues),3)) ~ "% Variance"))   
+      })
+
+        
       ## Reactive code for Tab 3
 
-      dataInput <- reactive({
-        PCweights = rep(NA, length(PCs))
-        for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
+      dataInput2 <- reactive({
+        PCweights = rep(NA, length(PCs)); for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
         
         as.data.frame(cbind(1:length(fpca.obj$mu), as.matrix(fpca.obj$mu)+efunctions %*% sqrt.evalues %*% PCweights ))
       })
@@ -154,14 +165,26 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       })      
       
       
-      ## Tab 1 plot
+      ## Tab 1 plot and download
       output$muPCplot <- renderPlot(
-        ggplot(mu, aes(x = V1, y = V2)) + geom_line(lwd=1) + theme_bw() +
-          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu + 2*dataInput2())), color = "blue", size = 4, shape = '+')+
-          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu - 2*dataInput2())), color = "red", size = 4, shape = "-")+
-          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
-          xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))+
-          ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[as.numeric(input$PCchoice)]/sum(fpca.obj$evalues),3)) ~ "% Variance"))
+        print(plotInput())
+      )
+      
+      # downloads blank plot, and only in browser mode
+      #output$downloadmuPCPlot <- downloadHandler(
+       # filename = "Plot1.png",
+        #content = function(file) {
+         # png(file)
+          #plotInput()
+          #dev.off()
+        #})    
+      
+      ## the following works but only in browser mode and can't specify file path
+      output$downloadmuPCPlot <- downloadHandler(
+        filename = "Plot1.png",
+        content = function(file) {
+          ggsave(file,plotInput())
+        }
       )
       
       ## Tab 2 Plots (Scree Plots)
@@ -175,7 +198,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       output$fpca_plot <- renderPlot(       
         ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=1, aes( color= "mu"))+theme_bw()+
           scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
-          geom_line(data = dataInput(), lwd = 1.5, aes(color = "subject")) + xlab(xlab) + ylab(ylab) + ggtitle(title)+
+          geom_line(data = dataInput2(), lwd = 1.5, aes(color = "subject")) + xlab(xlab) + ylab(ylab) + ggtitle(title)+
           scale_color_manual("Line Legend", values = c(mu = "black", subject = "cornflowerblue"), guide = FALSE)+ 
           theme(legend.key = element_blank()) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
       )
