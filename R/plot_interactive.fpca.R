@@ -159,24 +159,35 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
         
       ## Reactive code for Tab 3
 
-      dataInput2 <- reactive({
+      dataInput3 <- reactive({
         PCweights = rep(NA, length(PCs)); for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
         
         as.data.frame(cbind(1:length(fpca.obj$mu), as.matrix(fpca.obj$mu)+efunctions %*% sqrt.evalues %*% PCweights ))
       })
       
+      plotInput3 <- reactive({
+        p3 <- ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=1, aes(color= "mu"))+theme_bw()+
+          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
+          geom_line(data = dataInput3(), lwd = 1.5, aes(color = "subject")) + xlab(xlab) + ylab(ylab) + ggtitle(title)+
+          scale_color_manual("Line Legend", values = c(mu = "black", subject = "cornflowerblue"), guide = FALSE)+ 
+          theme(legend.key = element_blank()) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
+      })
       ## Reactive Code for Tab 4
 
-      dataInput3 <- reactive({
+      dataInput4 <- reactive({
         subjectnum = as.numeric(input$subject)
         as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[subjectnum,], fpca.obj$Y[subjectnum,]))
       })      
       
-      ## Reactive Code for Tab 5
-      dataInput <- reactive({
-        PCchoice = as.numeric(input$PCchoice)
-        scaled_efunctions[,PCchoice]
+      plotInput4 <- reactive({
+        p4 <- ggplot(data = dataInput4(), aes(x=V1,y=V2)) + geom_line(lwd=0.5, color = "gray") + theme_bw() +
+          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
+          geom_line(data = dataInput4(), aes(y=V3), size=1, color = "blue") +
+          geom_point(data = dataInput4(), aes(y=V4), color = "blue") +
+          xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2])) 
       })
+      
+      ## Reactive Code for Tab 5
       
       dataInput5 <- reactive({
         PCY = as.numeric(input$PCY)
@@ -188,8 +199,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       plotInput5 <- reactive({
         df <- dataInput5()
         p5 <- ggplot(df, aes(x = V1, y = V2))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
-          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))
-        
+          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
       })
       
       ## Tab 1 plot and download
@@ -222,21 +232,15 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       )
       
       ## Tab 3 Plot
-      output$fpca_plot <- renderPlot(       
-        ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=1, aes( color= "mu"))+theme_bw()+
-          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
-          geom_line(data = dataInput2(), lwd = 1.5, aes(color = "subject")) + xlab(xlab) + ylab(ylab) + ggtitle(title)+
-          scale_color_manual("Line Legend", values = c(mu = "black", subject = "cornflowerblue"), guide = FALSE)+ 
-          theme(legend.key = element_blank()) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
+      output$fpca_plot <- renderPlot(  
+        print(plotInput3())
+        
       )
             
       ## Tab 4 plots
-      output$subjectPlot <- renderPlot(  
-        ggplot(data = dataInput3(), aes(x=V1,y=V2)) + geom_line(lwd=0.5, color = "gray") + theme_bw() +
-          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
-          geom_line(data = dataInput3(), aes(y=V3), size=1, color = "blue") +
-          geom_point(data = dataInput3(), aes(y=V4), color = "blue") +
-          xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
+      output$subjectPlot <- renderPlot( 
+        print(plotInput4())
+         
       )
       
       ## Tab 5 Plot
