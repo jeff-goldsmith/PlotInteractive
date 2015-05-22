@@ -15,6 +15,9 @@
 #' called.
 #' @param basis basis type; options are "bs" for b-splines and "pbs" for periodic
 #' b-splines
+#' @param sigma optional covariance matrix used in GLS; if \code{NULL}, OLS will be
+#' used to estimated fixed effects, and the covariance matrix will be estimated from
+#' the residuals.
 #' 
 #' @author Jeff Goldsmith \email{ajg2202@@cumc.columbia.edu}
 #' @importFrom splines bs
@@ -34,7 +37,7 @@
 #' 
 #' fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 #' 
-fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs"){
+fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs", sigma = NULL){
   
   # not used now but may need this later
   call <- match.call()
@@ -96,32 +99,42 @@ fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs"){
   X = kronecker(X.des, Theta)
   n.coef = dim(X.des)[2]
   
-  ## OLS model fitting and processing results
-  cat("Step 1: OLS \n")
-  model.ols = lm(Y.vec ~ -1 + X)
-  Bx.ols = matrix(model.ols$coef, nrow = Kt, ncol = n.coef)  
-  beta.hat.ols = t(Bx.ols) %*% t(Theta)
+  if(is.null(sigma)){
+    ## OLS model fitting and processing results
+    cat("Using OLS to estimate residual covariance \n")
+    model.ols = lm(Y.vec ~ -1 + X)
+    Bx.ols = matrix(model.ols$coef, nrow = Kt, ncol = n.coef)  
+    beta.hat.ols = t(Bx.ols) %*% t(Theta)
   
-  ## Get Residual Structure
-  cat("Step 2: FPCA of OLS residuals \n")
-  resid.mat = matrix(resid(model.ols), I, D, byrow = TRUE)
-  fpca.resid = fpca(resid.mat, pve = .995)
-  resid.cov = with(fpca.resid, efunctions %*% diag(evalues) %*% t(efunctions))
+    resid.mat = matrix(resid(model.ols), I, D, byrow = TRUE)
+    
+    ## Get Residual Structure using FPCA
+    ## note: this is commented out because, in simulations based on the headstart data, 
+    ## using FPCA lead to higher-than-nominal sizes for tests of nested models. 
+    ## using the raw covariance worked better. using FPCA is possible, but relies
+    ## on some case-specific choices.
+    # raw.resid.cov = cov(resid.mat)
+    # fpca.resid = fpca.sc(resid.mat, pve = .9995, nbasis = 20)
+    # resid.cov = with(fpca.resid, efunctions %*% diag(evalues) %*% t(efunctions))
   
-  ## account for (possibly non-constant) ME nugget effect
-  diag(resid.cov) = max(diag(cov(resid.mat)), diag(resid.cov))
-  
-  #resid.cov = cov(resid.mat)
-  
+    ## account for (possibly non-constant) ME nugget effect
+    # sm.diag = Theta %*% solve(crossprod(Theta)) %*% t(Theta) %*% (diag(raw.resid.cov) - diag(resid.cov))
+    # if(sum( sm.diag < 0 ) >0) { sm.diag[ sm.diag < 0] = min((diag(raw.resid.cov) - diag(resid.cov))[ sm.diag < 0])}
+    # diag(resid.cov) = diag(resid.cov) + sm.diag
+    
+    resid.cov = cov(resid.mat)
+    
+    sigma = resid.cov
+  }
   
   ## GLS fit through prewhitening
-  cat("Step 3: GLS \n")
+  cat("GLS \n")
   
-  S = chol(solve(resid.cov))
+  S = chol(solve(sigma))
   Y.t = t(Y)
   Z = as.vector(S %*% Y.t)
-  T = S %*% Theta
-  M = kronecker (X.des,  T)
+  S.Theta = S %*% Theta
+  M = kronecker (X.des,  S.Theta)
   model = lm(Z ~ -1 + M)
 
   ## process results
@@ -131,24 +144,27 @@ fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs"){
   Re = matrix(re, I, D, byrow = TRUE)
   cov<-vcov(model)
   
-  ## get confidence intervals
+  ## get confidence intervals, wald statistics for coef functions
   beta.UB = beta.LB = matrix(NA, p, D)
+  wald.val = rep(NA, p)
   for(p.cur in 1:p){
     a = Kt*p.cur-(Kt-1)
     b = Kt*p.cur
     cov.cur = Theta %*% cov[a:b,a:b] %*%t(Theta)
     beta.UB[p.cur,] = beta.hat[p.cur,] + 1.96 * sqrt(diag(cov.cur))
     beta.LB[p.cur,] = beta.hat[p.cur,] - 1.96 * sqrt(diag(cov.cur))
+    wald.val[p.cur] = Bx[,p.cur] %*% solve(cov[a:b,a:b]) %*% Bx[,p.cur]
   }
   
   Yhat = X.des %*% beta.hat
   
-  ret = list(beta.hat, beta.UB, beta.LB, Yhat, mt_fixed, data)
-  names(ret) = c("beta.hat", "beta.UB", "beta.LB", "Yhat", "terms", "data")
+  ret = list(beta.hat, beta.UB, beta.LB, Yhat, mt_fixed, data, model, sigma, wald.val)
+  names(ret) = c("beta.hat", "beta.UB", "beta.LB", "Yhat", "terms", "data", "model.gls", "sigma", "wald.val")
   class(ret) = "fosr"
   ret
 
 }
+
 
 ###############################################################
 ###############################################################
