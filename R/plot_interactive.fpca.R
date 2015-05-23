@@ -45,7 +45,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
     PCnum = paste("PC", i, sep="")
     
     calls[[i]] =  eval(call("sliderInput", inputId= PCnum, label = paste(PCnum, ": ", varpercent[[i]],  "% Variance", sep=""),
-                            min = -2, max = 2, step = .1, value = 0, post = " SD"))
+                            min = -2, max = 2, step = .1, value = 0, post = " SD", animate = animationOptions(interval=500, loop=T)))
     
     PCs[i] = PCnum
   }  
