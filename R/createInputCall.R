@@ -14,7 +14,8 @@ createInputCall = function(name, variable){
   if(is.numeric(variable)){
     step.width = ((max(variable) - min(variable))/50)
     call("sliderInput", inputId = name, label = name, 
-         min = signif(min(variable), 2), max = signif(max(variable), 2), value = mean(variable), animate = animationOptions(interval=500))
+         min = signif(min(variable), 2), max = signif(max(variable), 2), value = mean(variable), 
+         animate = animationOptions(interval=300, loop=T))
 #  } else if(is.factor(variable) & length(levels(variable)) <= 2){
 #    checkboxInput(inputId = name, label = levels(variable)[2], value = FALSE)
   } else if(is.factor(variable) & length(levels(variable)) ){

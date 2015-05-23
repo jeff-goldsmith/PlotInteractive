@@ -31,6 +31,7 @@
 #' DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 #' 
 #' fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
+#' plot_interactive(fosr.dti)
 #' 
 plot_interactive <- function(x, ...){
   UseMethod("plot_interactive")
