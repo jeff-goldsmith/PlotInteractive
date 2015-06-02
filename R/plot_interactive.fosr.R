@@ -80,40 +80,41 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                     selectInput("CovarChoice", label = h4("Select Covariate"), choices = covarInputValues, selected = 1),
                                     hr(),
                                     helpText("Observed response data, colored according to the selected variable.")
-                             ),
+                                    ),
                              column(9, h4("Observed Data"), 
                                     plotOutput('ObsDataPlot')
-                             )
-                    ),tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
+                                    )
+                            ),
+                    tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
                              column(3,
                                     h4("Predictor Values"),
                                     eval(calls),
                                     hr(),
                                     helpText("Use inputs to select predictor values; a fitted response curve for a subject with those values is
                                              plotted to the right.")
-                             ),
+                                   ),
                              column(9, h4("Fitted Value"), 
-                                    plotOutput('FittedValPlot')
-                             )
-                    ),
+                                   plotOutput('FittedValPlot')
+                                   )
+                            ),
                     tabPanel("Coefficient Functions",
                              column(3, selectInput("CoefChoice", label = h4("Select Coefficient"), choices = coefInputValues, selected = 1),
                                     hr(),
                                     helpText("Coefficient functions and confidence bounds for the selected predictor.")
-                             ),
+                                    ),
                              column(9, h4(""), 
                                     plotOutput('CoefFunc')
-                            )     
-                    ),
+                                    )     
+                            ),
                     tabPanel("Residuals", icon = icon("medkit"),
                              column(3,
                                     hr(),
                                     helpText("Plot of residual curves.")
-                             ),
+                                    ),
                              column(9, h4(""), 
                                     plotOutput('resid')
-                             )     
-                    )
+                                    )     
+                            ),
                     ),
     
     #################################
@@ -156,7 +157,6 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       ## Code for FittedValues Tab
       #################################
       
-      ## reactive
       dataInputFittedVal <- reactive({
         
         variables = sapply(pred.list, function(u) {input[[u]]})
@@ -182,17 +182,15 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                    fit.vals = fit.vals)
       })
       
-      ## Tab 2 plot
       output$FittedValPlot <- renderPlot(
         ggplot(dataInputFittedVal(), aes(x = grid, y = fit.vals)) + geom_line(lwd=1) + theme_bw() +
           xlab(xlab) + ylab(ylab) + ylim(c(.9, 1.1) * range(fosr.obj$Yhat))
       )
       
       #################################
-      ## Code for CoefFunc Tab 3
+      ## Code for CoefFunc Tab
       #################################
       
-      ## Reactive Code for Tab 3
       dataInputCoefFunc <- reactive({
         CoefChoice = as.numeric(input$CoefChoice)
         data.frame(grid = grid,
@@ -201,7 +199,6 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                    LB = fosr.obj$beta.LB[CoefChoice,])
       })      
       
-      ## Tab 3 Plot
       output$CoefFunc <- renderPlot(
         ggplot(dataInputCoefFunc(), aes(x=grid, y=coef))+geom_line(linetype=1, lwd=1.5, color="black")+
           geom_line(data = dataInputCoefFunc(), aes(y=UB), color = "blue") +
@@ -210,17 +207,15 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       )
       
       #################################
-      ## Code for Tab 4
+      ## Code for Residual plot
       #################################
 
-      ## Code for Tab 4
       response = fosr.obj$data[,names(attributes(terms(fosr.obj$terms))$dataClasses)[1]]
       resid = response - fosr.obj$Yhat
       colnames(resid) = grid
       resid.m = melt(resid)
       colnames(resid.m) = c("subj", "grid", "residual")
     
-      ## Tab 4 Plot
       output$resid <- renderPlot(
         ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") +
           theme_bw() + xlab("") + ylab("") 

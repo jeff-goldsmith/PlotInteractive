@@ -85,7 +85,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     plotOutput('Scree')
                                     )     
                             ),
-                    tabPanel("PC Linear Combinations",
+                    tabPanel("Linear Combinations",
                              withMathJax(),
                              column(3,
                                       h4("FPC Score Values"),
@@ -99,7 +99,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       plotOutput('LinCom')
                                     )
                              ),
-                    tabPanel("Individual Subject",
+                    tabPanel("Subject Fits",
                              column(3,
                                       selectInput("subject", label = h4("Select Subject"), choices = 1:dim(fpca.obj$Yhat)[1], selected =1),
                                       hr(),
@@ -107,13 +107,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                                for the selected subject."), br(),
                                       downloadButton('downloadPlotSubject', 'Download Plot')
                                     ),
-                             
-
                              column(9, h4("Fitted and Observed Values for Selected Subject"),
                                       plotOutput("Subject")
                                     )
                              ),
-                    tabPanel("Score Plot",
+                    tabPanel("Score Scatterplot",
                              column(3, selectInput("PCX", label = h4("Select X-axis FPC"), choices = 1:fpca.obj$npc, selected = 1), hr(),
                                     selectInput("PCY", label = h4("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2),
                                     helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
