@@ -45,19 +45,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
     PCnum = paste("PC", i, sep="")
     
     calls[[i]] =  eval(call("sliderInput", inputId= PCnum, label = paste(PCnum, ": ", varpercent[[i]],  "% Variance", sep=""),
-                            min = -2, max = 2, step = .1, value = 0, post = " SD"))
+                            min = -2, max = 2, step = .1, value = 0, post = " SD", animate = animationOptions(interval=500, loop=T)))
     
     PCs[i] = PCnum
   }  
-  
-  ## Tab 4: extreme subjects
-  
-  
-  x = 1:100  
-  y = x
-  #rows = 1:dim(fpca.obj$score)[1]
-  #scoreIDs = cbind(rows, fpca.obj$score)
-  
+    
   #################################
   ## App
   #################################
@@ -77,7 +69,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     hr(),
                                     helpText("Solid black line indicates population mean. For the selected FPC, blue and red lines 
                                              indicate the populations mean +/- the FPC times 2 SDs of the associated score distribution."),
-                                    hr(), downloadButton('downloadmuPCPlot', 'Download Plot')
+                                    br(), downloadButton('downloadPlot1', 'Download Plot')
                                     ),
                              column(9, h4("Mean and FPCs"),
                                     plotOutput('muPCplot')
@@ -86,7 +78,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                     tabPanel("Scree Plot", icon = icon("medkit"),
                              column(3, hr(),
                                     helpText("Scree plots are displayed to the right. The first panel shows the plot of eigenvalues, and 
-                                             the second plot shows the cumulative percent variance explained.")
+                                             the second plot shows the cumulative percent variance explained."), br(),
+                                    downloadButton('downloadScree', 'Download Scree Plots')
                                     ),
                              column(9, h4("Scree Plots"), 
                                     plotOutput('scree')
@@ -99,7 +92,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       eval(calls),
                                       hr(),
                                       helpText("Sliders indicate FPC score values in SDs of the score distribution; plot shows the linear 
-                                             combination of mean and FPCs with the specified scores.")
+                                             combination of mean and FPCs with the specified scores."), br(),
+                                      downloadButton('downloadPlot3', 'Download Plot')
                                     ),
                              column(9, h4("Linear Combination of Mean and FPCs"), 
                                       plotOutput('fpca_plot')
@@ -110,7 +104,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       selectInput("subject", label = h4("Select Subject"), choices = 1:dim(fpca.obj$Yhat)[1], selected =1),
                                       hr(),
                                       helpText("Use the drop down menu to select a subject. Plot shows observed data and fitted values 
-                                               for the selected subject.")
+                                               for the selected subject."), br(),
+                                      downloadButton('downloadPlot4', 'Download Plot')
                                     ),
                              
 
@@ -118,14 +113,15 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       plotOutput("subjectPlot")
                                     )
                              ),
-                    tabPanel("Data Potato",
+                    tabPanel("Score Plot",
                              column(3, selectInput("PCX", label = h4("Select X-axis FPC"), choices = 1:fpca.obj$npc, selected = 1), hr(),
                                     selectInput("PCY", label = h4("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2),
                                     helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
-                                             distrbution for selected FPCs.")
+                                             distrbution for selected FPCs."), br(),
+                                    downloadButton('downloadPlot5', 'Download Plot')
                                     ),
                              column(9, h4("Score Distribution for Selected FPCs"),
-                                      plotOutput("DataPotato")
+                                      plotOutput("ScorePlot")
                                     )
                              )
                     ),
@@ -142,108 +138,124 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       
       ## Reactive Code for Tab 1 
 
-      dataInput <- reactive({
-        PCchoice = as.numeric(input$PCchoice)
-        scaled_efunctions[,PCchoice]
-      })
-
       plotInput <- reactive({
+        PCchoice = as.numeric(input$PCchoice)
+        scaled_efuncs = scaled_efunctions[,PCchoice]
+        
         p1 <- ggplot(mu, aes(x = V1, y = V2)) + geom_line(lwd=1) + theme_bw() +
-          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu + 2*dataInput())), color = "blue", size = 4, shape = '+')+
-          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu - 2*dataInput())), color = "red", size = 4, shape = "-")+
+          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu + 2*scaled_efuncs)), color = "blue", size = 4, shape = '+')+
+          geom_point(data = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu - 2*scaled_efuncs)), color = "red", size = 4, shape = "-")+
           scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
           xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))+
           ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[as.numeric(input$PCchoice)]/sum(fpca.obj$evalues),3)) ~ "% Variance"))   
       })
 
-        
-      ## Reactive code for Tab 3
-
-      dataInput2 <- reactive({
-        PCweights = rep(NA, length(PCs)); for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
-        
-        as.data.frame(cbind(1:length(fpca.obj$mu), as.matrix(fpca.obj$mu)+efunctions %*% sqrt.evalues %*% PCweights ))
+      ## Reactive code for Tab 2
+      
+      plotInput2 <- reactive({
+        p2 <-screeplots <- ggplot(scree, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
+          geom_point(size = 4, color = "black")+ theme_bw() + xlab("Principal Component") + ylab("") +
+          facet_wrap(~type, scales = "free_y") + ylim(0, NA) 
       })
       
-      ## Reactive Code for Tab 4
-
-      dataInput3 <- reactive({
+      ## Reactive code for Tab 3
+      
+      plotInput3 <- reactive({
+        PCweights = rep(NA, length(PCs)); for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
+        df = as.data.frame(cbind(1:length(fpca.obj$mu), as.matrix(fpca.obj$mu)+efunctions %*% sqrt.evalues %*% PCweights ))
+        
+        p3 <- ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=1, aes(color= "mu"))+theme_bw()+
+          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
+          geom_line(data = df, lwd = 1.5, aes(color = "subject")) + xlab(xlab) + ylab(ylab) + ggtitle(title)+
+          scale_color_manual("Line Legend", values = c(mu = "black", subject = "cornflowerblue"), guide = FALSE)+ 
+          theme(legend.key = element_blank()) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
+      })
+      
+      ## Reactive Code for Tab 4     
+      
+      plotInput4 <- reactive({
         subjectnum = as.numeric(input$subject)
-        as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[subjectnum,], fpca.obj$Y[subjectnum,]))
-      })      
+        df = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[subjectnum,], fpca.obj$Y[subjectnum,]))
+        
+        p4 <- ggplot(data = df, aes(x=V1,y=V2)) + geom_line(lwd=0.5, color = "gray") + theme_bw() +
+          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
+          geom_line(data = df, aes(y=V3), size=1, color = "blue") +
+          geom_point(data = df, aes(y=V4), color = "blue") +
+          xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2])) 
+      })
       
       ## Reactive Code for Tab 5
-      dataInput <- reactive({
-        PCchoice = as.numeric(input$PCchoice)
-        scaled_efunctions[,PCchoice]
-      })
-      
-      dataInput5 <- reactive({
+
+      plotInput5 <- reactive({
         PCY = as.numeric(input$PCY)
         PCX = as.numeric(input$PCX)
-        
-        as.data.frame(cbind(fpca.obj$scores[,PCX], fpca.obj$scores[, PCY]))
-      })
-      
-      plotInput5 <- reactive({
-        df <- dataInput5()
+        df = as.data.frame(cbind(fpca.obj$scores[,PCX], fpca.obj$scores[, PCY]))
+
         p5 <- ggplot(df, aes(x = V1, y = V2))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
-          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))
-        
+          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
       })
       
-      ## Tab 1 plot and download
+      ## Tab 1 Plot 
       output$muPCplot <- renderPlot(
         print(plotInput())
-      )
+      )   
       
-      # downloads blank plot, and only in browser mode
-      #output$downloadmuPCPlot <- downloadHandler(
-       # filename = "Plot1.png",
-        #content = function(file) {
-         # png(file)
-          #plotInput()
-          #dev.off()
-        #})    
-      
-      ## the following works but only in browser mode and can't specify file path
-      output$downloadmuPCPlot <- downloadHandler(
-        filename = "Plot1.png",
+      output$downloadPlot1 <- downloadHandler(
+        filename = function(){'mean_FPC.png' },
         content = function(file) {
           ggsave(file,plotInput())
         }
       )
       
-      ## Tab 2 Plots (Scree Plots)
+      ## Tab 2 Plots 
       output$scree <- renderPlot(
-        ggplot(scree, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
-          geom_point(size = 4, color = "black")+ theme_bw() + xlab("Principal Component") + ylab("") +
-          facet_wrap(~type, scales = "free_y") + ylim(0, NA)
+        print(plotInput2())
       )
       
+      output$downloadScree <- downloadHandler(
+        filename = function(){'screeplots.png' },
+        content = function(file) {
+          ggsave(file,plotInput2())
+        }
+      ) 
+      
       ## Tab 3 Plot
-      output$fpca_plot <- renderPlot(       
-        ggplot(mu, aes(x=V1, y=V2))+geom_line(lwd=1, aes( color= "mu"))+theme_bw()+
-          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
-          geom_line(data = dataInput2(), lwd = 1.5, aes(color = "subject")) + xlab(xlab) + ylab(ylab) + ggtitle(title)+
-          scale_color_manual("Line Legend", values = c(mu = "black", subject = "cornflowerblue"), guide = FALSE)+ 
-          theme(legend.key = element_blank()) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
+      output$fpca_plot <- renderPlot(  
+        print(plotInput3())
+        
+      )
+      
+      output$downloadPlot3 <- downloadHandler(
+        filename = function(){'FPC_LinearCombo.png' },
+        content = function(file) {
+          ggsave(file,plotInput3())
+        }
       )
             
       ## Tab 4 plots
-      output$subjectPlot <- renderPlot(  
-        ggplot(data = dataInput3(), aes(x=V1,y=V2)) + geom_line(lwd=0.5, color = "gray") + theme_bw() +
-          scale_x_continuous(breaks = seq(0, length(fpca.obj$mu)-1, length=6), labels = paste0(c(0, 0.2, 0.4, 0.6, 0.8, 1)))+
-          geom_line(data = dataInput3(), aes(y=V3), size=1, color = "blue") +
-          geom_point(data = dataInput3(), aes(y=V4), color = "blue") +
-          xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
+      output$subjectPlot <- renderPlot( 
+        print(plotInput4())
+         
+      )
+      
+      output$downloadPlot4 <- downloadHandler(
+        filename = function(){'subjectPlot.png' },
+        content = function(file) {
+          ggsave(file,plotInput4())
+        }
       )
       
       ## Tab 5 Plot
-      output$DataPotato <- renderPlot(
+      output$ScorePlot <- renderPlot(
         print(plotInput5())
-        )
-         
+      )
+      
+      output$downloadPlot5 <- downloadHandler(
+        filename = function(){'scorePlot.png' },
+        content = function(file) {
+          ggsave(file,plotInput5())
+        }
+      )  
       
     } ## end server
     )
