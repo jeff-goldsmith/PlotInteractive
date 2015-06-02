@@ -44,8 +44,13 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
   D = dim(fosr.obj$beta.hat)[2]
   grid = 1:D
   
-  ## Tab 1: fitted values
+  ## Tab 1: covariate choice
+  covar.list = names(attributes(terms(fosr.obj$terms))$dataClasses)
+  covar.list[1] = "None"
+  covarInputValues = 1:length(covar.list)
+  names(covarInputValues) = covar.list
   
+  ## Tab 2: fitted values
   pred.list = names(attributes(terms(fosr.obj$terms))$dataClasses)[-1]
   calls <- vector("list", length(pred.list))
   for(i in 1:length(pred.list)){
@@ -54,8 +59,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
     
   }  
   
-  ## Tab 2: coefficient functions
-  
+  ## Tab 3: coefficient functions
   coef.list = colnames(model.matrix(fosr.obj$terms, fosr.obj$data[1,]))
   coefInputValues = 1:p
   names(coefInputValues) = coef.list
@@ -73,7 +77,16 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
     ui = navbarPage(title = strong(style = "color: #ACD6FF; padding: 0px 0px 10px 10px; opacity: 0.95; ", "FoSR Plot"), windowTitle = "PlotInteractive", 
                     collapsible = FALSE, id = "nav",
                     inverse = TRUE, header = NULL,
-                    tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
+                    tabPanel("Observed Data", icon = icon("stats", lib = "glyphicon"),
+                             column(3,
+                                    selectInput("CovarChoice", label = h4("Select Covariate"), choices = covarInputValues, selected = 1),
+                                    hr(),
+                                    helpText("Observed response data, colored according to the selected variable.")
+                             ),
+                             column(9, h4("Observed Data"), 
+                                    plotOutput('ObsDataPlot')
+                             )
+                    ),tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
                              column(3,
                                     h4("Predictor Values"),
                                     eval(calls),
@@ -110,9 +123,45 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
     #################################
 
     server = function(input, output){
-
-      ## Reactive Code for Tab 1
       
+      #################################
+      ## Code for Tab 1
+      #################################
+      
+      ## reactive
+      
+      dataInputCovar <- reactive({
+        y.obs = fosr.obj$data[,names(attributes(terms(fosr.obj$terms))$dataClasses)[1]]
+        colnames(y.obs) = grid
+        y.obs.m = melt(y.obs)
+        colnames(y.obs.m) = c("subj", "grid", "value")
+        
+        CovarChoice = as.numeric(input$CovarChoice)
+        selected = covar.list[CovarChoice]
+        if(selected == "None") {
+          y.obs.m$covariate = NULL
+        } else {
+          y.obs.m$covariate = rep(fosr.obj$data[,selected], length(grid))
+        }
+        y.obs.m
+      })
+      
+      ## Tab 1 Plot
+      output$ObsDataPlot <- renderPlot(
+        if(is.null(dataInputCovar()$covariate)){
+          ggplot(dataInputCovar(), aes(x=grid, y=value, group = subj)) + geom_line(alpha = .3, color="black") +
+            theme_bw() + xlab("") + ylab("") 
+        } else {
+          ggplot(dataInputCovar(), aes(x=grid, y=value, group = subj, color = covariate)) + geom_line(alpha = .3) +
+            theme_bw() + xlab("") + ylab("") 
+        }
+      )
+      
+      #################################
+      ## Code for Tab 2
+      #################################
+      
+      ## reactive
       dataInput <- reactive({
         
         variables = sapply(pred.list, function(u) {input[[u]]})
@@ -122,14 +171,14 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
         reassign = function(var, newdata){
           if(is.numeric(fosr.obj$data[,var])){ 
             var.value = as.numeric(newdata[var]) 
-#          } else if(is.factor(fosr.obj$data[,var]) & length(levels(fosr.obj$data[,var])) <=2){ 
-#            var.value = factor(levels(fosr.obj$data[,var])[newdata[var]+1], levels = levels(fosr.obj$data[,var])) 
+            #          } else if(is.factor(fosr.obj$data[,var]) & length(levels(fosr.obj$data[,var])) <=2){ 
+            #            var.value = factor(levels(fosr.obj$data[,var])[newdata[var]+1], levels = levels(fosr.obj$data[,var])) 
           } else if(is.factor(fosr.obj$data[,var])){ 
             var.value = factor(newdata[var], levels = levels(fosr.obj$data[,var])) 
           }
           var.value
         }
-
+        
         input.data[,pred.list] = lapply(pred.list, reassign, variables)
         
         X.design = t(matrix(model.matrix(fosr.obj$terms, input.data)))
@@ -138,8 +187,17 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                    fit.vals = fit.vals)
       })
       
-      ## Reactive Code for Tab 2
+      ## Tab 2 plot
+      output$FittedValPlot <- renderPlot(
+        ggplot(dataInput(), aes(x = grid, y = fit.vals)) + geom_line(lwd=1) + theme_bw() +
+          xlab(xlab) + ylab(ylab) + ylim(c(.9, 1.1) * range(fosr.obj$Yhat))
+      )
       
+      #################################
+      ## Code for Tab 3
+      #################################
+      
+      ## Reactive Code for Tab 3
       dataInput3 <- reactive({
         CoefChoice = as.numeric(input$CoefChoice)
         data.frame(grid = grid,
@@ -148,23 +206,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                    LB = fosr.obj$beta.LB[CoefChoice,])
       })      
       
-
-      ## Code for Tab 3
-      
-      response = fosr.obj$data[,names(attributes(terms(fosr.obj$terms))$dataClasses)[1]]
-      resid = response - fosr.obj$Yhat
-      colnames(resid) = grid
-      resid.m = melt(resid)
-      colnames(resid.m) = c("subj", "grid", "residual")
-      
-      ## Tab 1 plot
-      
-      output$FittedValPlot <- renderPlot(
-        ggplot(dataInput(), aes(x = grid, y = fit.vals)) + geom_line(lwd=1) + theme_bw() +
-          xlab(xlab) + ylab(ylab) + ylim(range(fosr.obj$Yhat))
-      )
-            
-      ## Tab 2 Plot
+      ## Tab 3 Plot
       output$coef <- renderPlot(
         ggplot(dataInput3(), aes(x=grid, y=coef))+geom_line(linetype=1, lwd=1.5, color="black")+
           geom_line(data = dataInput3(), aes(y=UB), color = "blue") +
@@ -172,13 +214,24 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
           theme_bw() + xlab("") + ylab("") 
       )
       
-      ## Tab 3 Plot
+      #################################
+      ## Code for Tab 4
+      #################################
+
+      ## Code for Tab 4
+      response = fosr.obj$data[,names(attributes(terms(fosr.obj$terms))$dataClasses)[1]]
+      resid = response - fosr.obj$Yhat
+      colnames(resid) = grid
+      resid.m = melt(resid)
+      colnames(resid.m) = c("subj", "grid", "residual")
+    
+      ## Tab 4 Plot
       output$resid <- renderPlot(
         ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") +
           theme_bw() + xlab("") + ylab("") 
       )
       
     } ## end server
-    )
+  )
 }
 

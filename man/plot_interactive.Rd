@@ -7,7 +7,7 @@
 plot_interactive(x, ...)
 }
 \arguments{
-\item{x}{object to be plotted. Currenlty, only allowed data type is "fpca".}
+\item{x}{object to be plotted. Currenlty, allowed data types are \code{fpca} and \code{fosr}.}
 
 \item{...}{additional arguments passed to plotting functions}
 }
@@ -25,7 +25,7 @@ fpca.cd4 = fpca(cd4, var=TRUE)
 plot_interactive(fpca.cd4)
 
 
-##### FPCA Example #####
+##### FoSR Example #####
 
 data(DTI)
 DTI = subset(DTI, select = c(cca, case, pasat))
@@ -34,6 +34,7 @@ DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
 DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 
 fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
+plot_interactive(fosr.dti)
 }
 \author{
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu},

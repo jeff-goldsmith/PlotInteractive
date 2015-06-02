@@ -2,7 +2,7 @@
 #' 
 #' Generic function for interactive plotting of functional data analysis results
 #' 
-#' @param x object to be plotted. Currenlty, only allowed data type is "fpca".
+#' @param x object to be plotted. Currenlty, allowed data types are \code{fpca} and \code{fosr}.
 #' @param ... additional arguments passed to plotting functions
 #' 
 #' @author Jeff Goldsmith \email{jeff.goldsmith@@columbia.edu}, 
@@ -22,7 +22,7 @@
 #' plot_interactive(fpca.cd4)
 #' 
 #' 
-#' ##### FPCA Example #####
+#' ##### FoSR Example #####
 #' 
 #' data(DTI)
 #' DTI = subset(DTI, select = c(cca, case, pasat))
@@ -31,6 +31,7 @@
 #' DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 #' 
 #' fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
+#' plot_interactive(fosr.dti)
 #' 
 plot_interactive <- function(x, ...){
   UseMethod("plot_interactive")
