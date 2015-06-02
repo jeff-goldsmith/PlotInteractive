@@ -15,6 +15,7 @@
 #' library(refund)
 #' library(dplyr)
 #' 
+#' 
 #' ##### FPCA Example #####
 #' 
 #' data(cd4)
@@ -30,8 +31,11 @@
 #' DTI$gender = factor(sample(c("male","female"), dim(DTI)[1], replace = TRUE))
 #' DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
 #' 
-#' fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
-#' plot_interactive(fosr.dti)
+#' fosr.dti1 = fosr_gls(cca ~ pasat, data = DTI)
+#' plot_interactive(fosr.dti1)
+#' 
+#' fosr.dti2 = fosr_gls(cca ~ pasat * gender + status, data = DTI)
+#' plot_interactive(fosr.dti2)
 #' 
 plot_interactive <- function(x, ...){
   UseMethod("plot_interactive")

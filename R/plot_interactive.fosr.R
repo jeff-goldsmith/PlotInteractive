@@ -54,9 +54,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
   pred.list = names(attributes(terms(fosr.obj$terms))$dataClasses)[-1]
   calls <- vector("list", length(pred.list))
   for(i in 1:length(pred.list)){
-    
     calls[[i]] =  eval(createInputCall(pred.list[i], get(pred.list[i], fosr.obj$data) ))
-    
   }  
   
   ## Tab 3: coefficient functions
@@ -104,7 +102,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                     helpText("Coefficient functions and confidence bounds for the selected predictor.")
                              ),
                              column(9, h4(""), 
-                                    plotOutput('coef')
+                                    plotOutput('CoefFunc')
                             )     
                     ),
                     tabPanel("Residuals", icon = icon("medkit"),
@@ -125,12 +123,10 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
     server = function(input, output){
       
       #################################
-      ## Code for Tab 1
+      ## Code for observed data tab
       #################################
       
-      ## reactive
-      
-      dataInputCovar <- reactive({
+      dataInputObsData <- reactive({
         y.obs = fosr.obj$data[,names(attributes(terms(fosr.obj$terms))$dataClasses)[1]]
         colnames(y.obs) = grid
         y.obs.m = melt(y.obs)
@@ -146,23 +142,22 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
         y.obs.m
       })
       
-      ## Tab 1 Plot
       output$ObsDataPlot <- renderPlot(
-        if(is.null(dataInputCovar()$covariate)){
-          ggplot(dataInputCovar(), aes(x=grid, y=value, group = subj)) + geom_line(alpha = .3, color="black") +
+        if(is.null(dataInputObsData()$covariate)){
+          ggplot(dataInputObsData(), aes(x=grid, y=value, group = subj)) + geom_line(alpha = .3, color="black") +
             theme_bw() + xlab("") + ylab("") 
         } else {
-          ggplot(dataInputCovar(), aes(x=grid, y=value, group = subj, color = covariate)) + geom_line(alpha = .3) +
+          ggplot(dataInputObsData(), aes(x=grid, y=value, group = subj, color = covariate)) + geom_line(alpha = .3) +
             theme_bw() + xlab("") + ylab("") 
         }
       )
       
       #################################
-      ## Code for Tab 2
+      ## Code for FittedValues Tab
       #################################
       
       ## reactive
-      dataInput <- reactive({
+      dataInputFittedVal <- reactive({
         
         variables = sapply(pred.list, function(u) {input[[u]]})
         
@@ -189,16 +184,16 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       
       ## Tab 2 plot
       output$FittedValPlot <- renderPlot(
-        ggplot(dataInput(), aes(x = grid, y = fit.vals)) + geom_line(lwd=1) + theme_bw() +
+        ggplot(dataInputFittedVal(), aes(x = grid, y = fit.vals)) + geom_line(lwd=1) + theme_bw() +
           xlab(xlab) + ylab(ylab) + ylim(c(.9, 1.1) * range(fosr.obj$Yhat))
       )
       
       #################################
-      ## Code for Tab 3
+      ## Code for CoefFunc Tab 3
       #################################
       
       ## Reactive Code for Tab 3
-      dataInput3 <- reactive({
+      dataInputCoefFunc <- reactive({
         CoefChoice = as.numeric(input$CoefChoice)
         data.frame(grid = grid,
                    coef = fosr.obj$beta.hat[CoefChoice,],
@@ -207,10 +202,10 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       })      
       
       ## Tab 3 Plot
-      output$coef <- renderPlot(
-        ggplot(dataInput3(), aes(x=grid, y=coef))+geom_line(linetype=1, lwd=1.5, color="black")+
-          geom_line(data = dataInput3(), aes(y=UB), color = "blue") +
-          geom_line(data = dataInput3(), aes(y=LB), color = "blue")+
+      output$CoefFunc <- renderPlot(
+        ggplot(dataInputCoefFunc(), aes(x=grid, y=coef))+geom_line(linetype=1, lwd=1.5, color="black")+
+          geom_line(data = dataInputCoefFunc(), aes(y=UB), color = "blue") +
+          geom_line(data = dataInputCoefFunc(), aes(y=LB), color = "blue")+
           theme_bw() + xlab("") + ylab("") 
       )
       

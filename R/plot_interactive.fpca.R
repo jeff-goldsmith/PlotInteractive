@@ -69,7 +69,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     hr(),
                                     helpText("Solid black line indicates population mean. For the selected FPC, blue and red lines 
                                              indicate the populations mean +/- the FPC times 2 SDs of the associated score distribution."),
-                                    br(), downloadButton('downloadPlot1', 'Download Plot')
+                                    br(), downloadButton('downloadPlotMuPC', 'Download Plot')
                                     ),
                              column(9, h4("Mean and FPCs"),
                                     plotOutput('muPCplot')
@@ -79,10 +79,10 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              column(3, hr(),
                                     helpText("Scree plots are displayed to the right. The first panel shows the plot of eigenvalues, and 
                                              the second plot shows the cumulative percent variance explained."), br(),
-                                    downloadButton('downloadScree', 'Download Scree Plots')
+                                    downloadButton('downloadPlotScree', 'Download Plot')
                                     ),
                              column(9, h4("Scree Plots"), 
-                                    plotOutput('scree')
+                                    plotOutput('Scree')
                                     )     
                             ),
                     tabPanel("PC Linear Combinations",
@@ -93,10 +93,10 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       hr(),
                                       helpText("Sliders indicate FPC score values in SDs of the score distribution; plot shows the linear 
                                              combination of mean and FPCs with the specified scores."), br(),
-                                      downloadButton('downloadPlot3', 'Download Plot')
+                                      downloadButton('downloadPlotLinCom', 'Download Plot')
                                     ),
                              column(9, h4("Linear Combination of Mean and FPCs"), 
-                                      plotOutput('fpca_plot')
+                                      plotOutput('LinCom')
                                     )
                              ),
                     tabPanel("Individual Subject",
@@ -105,12 +105,12 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       hr(),
                                       helpText("Use the drop down menu to select a subject. Plot shows observed data and fitted values 
                                                for the selected subject."), br(),
-                                      downloadButton('downloadPlot4', 'Download Plot')
+                                      downloadButton('downloadPlotSubject', 'Download Plot')
                                     ),
                              
 
                              column(9, h4("Fitted and Observed Values for Selected Subject"),
-                                      plotOutput("subjectPlot")
+                                      plotOutput("Subject")
                                     )
                              ),
                     tabPanel("Score Plot",
@@ -118,7 +118,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     selectInput("PCY", label = h4("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2),
                                     helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
                                              distrbution for selected FPCs."), br(),
-                                    downloadButton('downloadPlot5', 'Download Plot')
+                                    downloadButton('downloadPlotScore', 'Download Plot')
                                     ),
                              column(9, h4("Score Distribution for Selected FPCs"),
                                       plotOutput("ScorePlot")
@@ -136,9 +136,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       efunctions = fpca.obj$efunctions; sqrt.evalues = diag(sqrt(fpca.obj$evalues))      
       scaled_efunctions = efunctions %*% sqrt.evalues
       
-      ## Reactive Code for Tab 1 
-
-      plotInput <- reactive({
+      #################################
+      ## Code for mu PC plot
+      #################################
+      
+      plotInputMuPC <- reactive({
         PCchoice = as.numeric(input$PCchoice)
         scaled_efuncs = scaled_efunctions[,PCchoice]
         
@@ -149,18 +151,44 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
           xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))+
           ggtitle(bquote(psi[.(input$PCchoice)]~(t) ~ "," ~.(100*round(fpca.obj$evalues[as.numeric(input$PCchoice)]/sum(fpca.obj$evalues),3)) ~ "% Variance"))   
       })
-
-      ## Reactive code for Tab 2
       
-      plotInput2 <- reactive({
+      output$muPCplot <- renderPlot(
+        print(plotInputMuPC())
+      )   
+      
+      output$downloadPlotMuPC <- downloadHandler(
+        filename = function(){ 'mean_FPC.png' },
+        content = function(file) {
+          ggsave(file,plotInputMuPC())
+        }
+      )
+
+      #################################
+      ## Code for scree plot
+      #################################
+      
+      plotInputScree <- reactive({
         p2 <-screeplots <- ggplot(scree, aes(x=k, y=lambda))+geom_line(linetype=1, lwd=1.5, color="black")+
           geom_point(size = 4, color = "black")+ theme_bw() + xlab("Principal Component") + ylab("") +
           facet_wrap(~type, scales = "free_y") + ylim(0, NA) 
       })
       
-      ## Reactive code for Tab 3
+      output$Scree <- renderPlot(
+        print(plotInputScree())
+      )
       
-      plotInput3 <- reactive({
+      output$downloadPlotScree <- downloadHandler(
+        filename = function(){'screeplots.png' },
+        content = function(file) {
+          ggsave(file,plotInputScree())
+        }
+      ) 
+      
+      #################################
+      ## Code for linear combinations
+      #################################
+      
+      plotInputLinCom <- reactive({
         PCweights = rep(NA, length(PCs)); for(i in 1:length(PCs)){PCweights[i] = input[[PCs[i]]]}
         df = as.data.frame(cbind(1:length(fpca.obj$mu), as.matrix(fpca.obj$mu)+efunctions %*% sqrt.evalues %*% PCweights ))
         
@@ -171,9 +199,23 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
           theme(legend.key = element_blank()) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2]))
       })
       
-      ## Reactive Code for Tab 4     
+      output$LinCom <- renderPlot(  
+        print(plotInputLinCom())
+        
+      )
       
-      plotInput4 <- reactive({
+      output$downloadPlotLinCom <- downloadHandler(
+        filename = function(){'FPC_LinearCombo.png' },
+        content = function(file) {
+          ggsave(file,plotInputLinCom())
+        }
+      )
+      
+      #################################
+      ## Code for subject plots
+      #################################
+            
+      plotInputSubject <- reactive({
         subjectnum = as.numeric(input$subject)
         df = as.data.frame(cbind(1:length(fpca.obj$mu), fpca.obj$mu, fpca.obj$Yhat[subjectnum,], fpca.obj$Y[subjectnum,]))
         
@@ -184,9 +226,22 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
           xlab(xlab) + ylab(ylab) + ylim(c(range(fpca.obj$Yhat)[1], range(fpca.obj$Yhat)[2])) 
       })
       
-      ## Reactive Code for Tab 5
-
-      plotInput5 <- reactive({
+      output$Subject <- renderPlot( 
+        print(plotInputSubject())        
+      )
+      
+      output$downloadPlotSubject <- downloadHandler(
+        filename = function(){'subjectPlot.png' },
+        content = function(file) {
+          ggsave(file,plotInputSubject())
+        }
+      )
+      
+      #################################
+      ## Code for score plots
+      #################################
+      
+      plotInputScore <- reactive({
         PCY = as.numeric(input$PCY)
         PCX = as.numeric(input$PCX)
         df = as.data.frame(cbind(fpca.obj$scores[,PCX], fpca.obj$scores[, PCY]))
@@ -195,69 +250,19 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
           xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
       })
       
-      ## Tab 1 Plot 
-      output$muPCplot <- renderPlot(
-        print(plotInput())
-      )   
-      
-      output$downloadPlot1 <- downloadHandler(
-        filename = function(){'mean_FPC.png' },
-        content = function(file) {
-          ggsave(file,plotInput())
-        }
-      )
-      
-      ## Tab 2 Plots 
-      output$scree <- renderPlot(
-        print(plotInput2())
-      )
-      
-      output$downloadScree <- downloadHandler(
-        filename = function(){'screeplots.png' },
-        content = function(file) {
-          ggsave(file,plotInput2())
-        }
-      ) 
-      
-      ## Tab 3 Plot
-      output$fpca_plot <- renderPlot(  
-        print(plotInput3())
-        
-      )
-      
-      output$downloadPlot3 <- downloadHandler(
-        filename = function(){'FPC_LinearCombo.png' },
-        content = function(file) {
-          ggsave(file,plotInput3())
-        }
-      )
-            
-      ## Tab 4 plots
-      output$subjectPlot <- renderPlot( 
-        print(plotInput4())
-         
-      )
-      
-      output$downloadPlot4 <- downloadHandler(
-        filename = function(){'subjectPlot.png' },
-        content = function(file) {
-          ggsave(file,plotInput4())
-        }
-      )
-      
       ## Tab 5 Plot
       output$ScorePlot <- renderPlot(
-        print(plotInput5())
+        print(plotInputScore())
       )
       
-      output$downloadPlot5 <- downloadHandler(
+      output$downloadPlotScore <- downloadHandler(
         filename = function(){'scorePlot.png' },
         content = function(file) {
-          ggsave(file,plotInput5())
+          ggsave(file,plotInputScore())
         }
       )  
       
     } ## end server
-    )
+  )
 }
 
