@@ -114,7 +114,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                              column(9, h4(""), 
                                     plotOutput('resid')
                                     )     
-                            ),
+                            )
                     ),
     
     #################################
