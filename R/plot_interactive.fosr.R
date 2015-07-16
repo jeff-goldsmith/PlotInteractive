@@ -216,10 +216,22 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       resid.m = melt(resid)
       colnames(resid.m) = c("subj", "grid", "residual")
     
+      outs = outliers(resid, 0.75) ## 0.75 fines outlier as 'IQR' X .75. Change this to the standard 1.5
+      resid.outs.m = melt(outs$outcurves)
+      colnames(resid.outs.m) = c("subj", "grid", "residual")
+      
+      resid.med.m = melt(outs$medcurve)
+      colnames(resid.med.m) = c("subj", "grid", "residual")
+      
       output$resid <- renderPlot(
         ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") +
-          theme_bw() + xlab("") + ylab("") 
+          theme_bw() + xlab("") + ylab("") +
+          geom_line(data=resid.outs.m, aes(x=grid, y=residual, group=subj), color="red")+
+          geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj), lwd=1.5)
+        
       )
+      
+      ## add subject number
       
     } ## end server
   )
