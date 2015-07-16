@@ -33,7 +33,7 @@ outliers = function(data, factor=1.5){
   # tranpose data so that each column is a curve rather than each row
   data = t(data)
   
-  depth = fMBD(resid.t)
+  depth = fMBD(data)
   
   tp = dim(data)[1] # number of observations per curve
   n = dim(data)[2]  # number of curves
