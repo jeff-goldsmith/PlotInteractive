@@ -45,7 +45,7 @@
 #' 
 #' fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 #' 
-fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs", sigma = NULL){
+fosr_gls = function(formula, data=NULL, Kt=5, basis = "bs", sigma = NULL, verbose = FALSE, CI.type = "pointwise"){
   
   # not used now but may need this later
   call <- match.call()
