@@ -107,7 +107,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                     )     
                             ),
                     tabPanel("Residuals", icon = icon("medkit"),
-                             column(3,
+                             column(3, h4("Show Outliers"), checkboxInput("outliers", label="Show median and outliers"),
                                     hr(),
                                     helpText("Plot of residual curves.")
                                     ),
@@ -206,6 +206,9 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
           theme_bw() + xlab("") + ylab("") 
       )
       
+      
+      
+      
       #################################
       ## Code for Residual plot
       #################################
@@ -223,13 +226,28 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       resid.med.m = melt(outs$medcurve)
       colnames(resid.med.m) = c("subj", "grid", "residual")
       
-      output$resid <- renderPlot(
-        ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") +
-          theme_bw() + xlab("") + ylab("") +
-          geom_line(data=resid.outs.m, aes(x=grid, y=residual, group=subj), color="red")+
-          geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj), lwd=1.5)
+       plotInputResid <- reactive({
+        residPlot = ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") 
         
+        if(input$outliers==TRUE){residPlot=residPlot+
+                                   geom_line(data=resid.outs.m, aes(x=grid, y=residual, group=subj, color="outliers"))+
+                                   geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj, color = "median"))+
+                                   scale_colour_manual("", values = c("outliers"="red", "median"="blue"), guide = FALSE)
+                                   #theme(legend.position="bottom")
+                                   
+        }
+        
+        residPlot + theme_bw() + xlab("") + ylab("")
+      })   
+      
+      
+      
+      output$resid <- renderPlot(
+        plotInputResid() 
+
       )
+      
+       
       
       ## add subject number
       
