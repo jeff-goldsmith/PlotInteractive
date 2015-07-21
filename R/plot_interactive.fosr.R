@@ -102,16 +102,17 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                     hr(),
                                     helpText("Coefficient functions and confidence bounds for the selected predictor.")
                                     ),
-                             column(9, h4(""), 
+                             column(9, h4("Coefficient Function"), 
                                     plotOutput('CoefFunc')
                                     )     
                             ),
                     tabPanel("Residuals", icon = icon("medkit"),
                              column(3, h4("Show Outliers"), checkboxInput("outliers", label="Show median and outliers"),
                                     hr(),
-                                    helpText("Plot of residual curves.")
+                                    helpText("Plot of residual curves. If box is checked then median and any outliers are shown 
+                                             in blue and red, respectively.")
                                     ),
-                             column(9, h4(""), 
+                             column(9, h4("Residuals"), 
                                     plotOutput('resid')
                                     )     
                             )
@@ -149,7 +150,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
             theme_bw() + xlab("") + ylab("") 
         } else {
           ggplot(dataInputObsData(), aes(x=grid, y=value, group = subj, color = covariate)) + geom_line(alpha = .3) +
-            theme_bw() + xlab("") + ylab("") 
+            theme_bw() + xlab("") + ylab("") +theme(legend.position="bottom", legend.title=element_blank())
         }
       )
       
@@ -219,7 +220,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       resid.m = melt(resid)
       colnames(resid.m) = c("subj", "grid", "residual")
     
-      outs = outliers(resid, 0.75) ## 0.75 fines outlier as 'IQR' X .75. Change this to the standard 1.5
+      outs = outliers(resid, 1.5) 
       resid.outs.m = melt(outs$outcurves)
       colnames(resid.outs.m) = c("subj", "grid", "residual")
       
@@ -229,13 +230,18 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
        plotInputResid <- reactive({
         residPlot = ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") 
         
-        if(input$outliers==TRUE){residPlot=residPlot+
+        if(input$outliers==TRUE & dim(outs$outcurves)[1]!= 0){residPlot=residPlot+
                                    geom_line(data=resid.outs.m, aes(x=grid, y=residual, group=subj, color="outliers"))+
                                    geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj, color = "median"))+
                                    scale_colour_manual("", values = c("outliers"="red", "median"="blue"), guide = FALSE)
                                    #theme(legend.position="bottom")
                                    
-        }
+        } 
+        else if(input$outliers==TRUE & dim(outs$outcurves)[1]== 0){residPlot=residPlot+
+                                   geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj, color = "median"))+
+                                   scale_colour_manual("", values = c("median"="blue"), guide=FALSE)
+                                                              
+        } 
         
         residPlot + theme_bw() + xlab("") + ylab("")
       })   
