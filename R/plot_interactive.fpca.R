@@ -119,8 +119,19 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     downloadButton('downloadPlotScore', 'Download Plot')
                                     ),
                              column(9, h4("Score Distribution for Selected FPCs"),
-                                      plotOutput("ScorePlot")
-                                    )
+                                      plotOutput("ScorePlot",
+                                                 brush=brushOpts(
+                                                   id = "ScorePlot_brush",
+                                                   resetOnNew = TRUE)
+                                                 )
+                                    ),
+                             fluidRow(
+                               column(3
+                                      ),
+                               column(9, h4("Curves for selected observations"),
+                                      plotOutput("ScorePlot2")
+                                      )
+                               )
                              )
                     ),
     
@@ -238,27 +249,55 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       #################################
       ## Code for score plots
       #################################
+      scoredata = as.data.frame(cbind(fpca.obj$scores, fpca.obj$Yhat)) 
+      colnames(scoredata) = c(paste0("PC", 1:fpca.obj$npc), paste0("subj", 1:dim(fpca.obj$Yhat)[2]))
       
-      plotInputScore <- reactive({
-        PCY = as.numeric(input$PCY)
-        PCX = as.numeric(input$PCX)
-        df = as.data.frame(cbind(fpca.obj$scores[,PCX], fpca.obj$scores[, PCY]))
+      ## get PCs selected for X and Y axis
+      PCX <- reactive({ paste0("PC", input$PCX) })
+      PCY <- reactive({ paste0("PC", input$PCY) })
+         
+     # plotInputScore <- reactive({
+        #df = as.data.frame(cbind(fpca.obj$scores[,PCX()], fpca.obj$scores[, PCY()]))
 
-        p5 <- ggplot(df, aes(x = V1, y = V2))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
-          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
-      })
+        #p5 <- ggplot(scoredata, aes(x = PCX(), y = PCY()))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
+         # xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
+      #})
       
       ## Tab 5 Plot
-      output$ScorePlot <- renderPlot(
-        print(plotInputScore())
-      )
+      output$ScorePlot <- renderPlot({
+        #print(plotInputScore())
+        ggplot(scoredata, aes_string(x = PCX(), y = PCY()))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
+          xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
+               
+      })
       
-      output$downloadPlotScore <- downloadHandler(
-        filename = function(){'scorePlot.png' },
-        content = function(file) {
-          ggsave(file,plotInputScore())
+      ### second score plot
+      Yhat.all.m = melt(fpca.obj$Yhat)
+      colnames(Yhat.all.m) = c("subj", "time", "value")   
+      baseplot = ggplot(Yhat.all.m, aes(x=time, y=value, group = subj)) + geom_line(alpha = 1/5, color="black")+theme_bw()
+      
+      output$ScorePlot2 <- renderPlot({
+   
+        brush <- input$ScorePlot_brush
+        if(!is.null(brush)){           
+          points = brushedPoints(scoredata, input$ScorePlot_brush, xvar=PCX(), yvar = PCY())
+          Yhat.m = melt(as.matrix(points[,-c(1:fpca.obj$npc)]))
+          
+        }else{
+          Yhat.m = as.data.frame(cbind(1, 1:length(fpca.obj$mu), fpca.obj$mu))
         }
-      )  
+        
+        colnames(Yhat.m) <- c("subj", "time", "value")  
+        baseplot+geom_line(data= Yhat.m, aes(x=as.numeric(time), y=value, group = subj), color="blue")
+        
+      })
+      
+      #output$downloadPlotScore <- downloadHandler(
+      #  filename = function(){'scorePlot.png' },
+      #  content = function(file) {
+      #    ggsave(file,plotInputScore())
+      #  }
+      #)  
       
     } ## end server
   )
