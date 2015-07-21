@@ -112,11 +112,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     )
                              ),
                     tabPanel("Score Scatterplot",
+                             fluidRow(
                              column(3, selectInput("PCX", label = h4("Select X-axis FPC"), choices = 1:fpca.obj$npc, selected = 1), hr(),
                                     selectInput("PCY", label = h4("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2),
                                     helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
-                                             distrbution for selected FPCs."), br(),
-                                    downloadButton('downloadPlotScore', 'Download Plot')
+                                             distrbution for selected FPCs."), br()
                                     ),
                              column(9, h4("Score Distribution for Selected FPCs"),
                                       plotOutput("ScorePlot",
@@ -124,11 +124,12 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                                    id = "ScorePlot_brush",
                                                    resetOnNew = TRUE)
                                                  )
-                                    ),
+                                    )),
                              fluidRow(
-                               column(3
+                               column(3, br(),hr(), helpText("Black curves are fitted values for all subjects. Blue curves correspond to points 
+                                                  selected in graph above. If no points are selected then mean curve is shown.")
                                       ),
-                               column(9, h4("Curves for selected observations"),
+                               column(9, h4("Curves corresponding to selected points"),
                                       plotOutput("ScorePlot2")
                                       )
                                )
@@ -256,19 +257,11 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       PCX <- reactive({ paste0("PC", input$PCX) })
       PCY <- reactive({ paste0("PC", input$PCY) })
          
-     # plotInputScore <- reactive({
-        #df = as.data.frame(cbind(fpca.obj$scores[,PCX()], fpca.obj$scores[, PCY()]))
-
-        #p5 <- ggplot(scoredata, aes(x = PCX(), y = PCY()))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
-         # xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
-      #})
       
       ## Tab 5 Plot
       output$ScorePlot <- renderPlot({
-        #print(plotInputScore())
         ggplot(scoredata, aes_string(x = PCX(), y = PCY()))+geom_point(color = "blue", alpha = 1/5, size = 3)+theme_bw()+
           xlab(paste("Scores for FPC", input$PCX))+ylab(paste("Scores for FPC", input$PCY))  
-               
       })
       
       ### second score plot
@@ -291,14 +284,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
         baseplot+geom_line(data= Yhat.m, aes(x=as.numeric(time), y=value, group = subj), color="blue")
         
       })
-      
-      #output$downloadPlotScore <- downloadHandler(
-      #  filename = function(){'scorePlot.png' },
-      #  content = function(file) {
-      #    ggsave(file,plotInputScore())
-      #  }
-      #)  
-      
+            
     } ## end server
   )
 }
