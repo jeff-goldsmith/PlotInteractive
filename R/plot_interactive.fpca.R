@@ -65,21 +65,20 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                     inverse = TRUE, header = NULL,
                     tabPanel("Mean +/- FPCs", icon = icon("stats", lib = "glyphicon"),
                              column(3,
-                                    selectInput("PCchoice", label = h4("Select FPC"), choices = 1:fpca.obj$npc, selected = 1),
-                                    hr(),
-                                    helpText("Solid black line indicates population mean. For the selected FPC, blue and red lines 
-                                             indicate the populations mean +/- the FPC times 2 SDs of the associated score distribution."),
-                                    br(), downloadButton('downloadPlotMuPC', 'Download Plot')
+                                    helpText("Solid black line indicates population mean. For the FPC selected below, blue and red lines 
+                                             indicate the population mean +/- the FPC times 2 SDs of the associated score distribution."), hr(),
+                                    selectInput("PCchoice", label = ("Select FPC"), choices = 1:fpca.obj$npc, selected = 1),
+                                    br(), br(), downloadButton('downloadPlotMuPC', 'Download Plot')
                                     ),
                              column(9, h4("Mean and FPCs"),
                                     plotOutput('muPCplot')
                                     )
                             ),
                     tabPanel("Scree Plot", icon = icon("medkit"),
-                             column(3, hr(),
-                                    helpText("Scree plots are displayed to the right. The first panel shows the plot of eigenvalues, and 
-                                             the second plot shows the cumulative percent variance explained."), br(),
-                                    downloadButton('downloadPlotScree', 'Download Plot')
+                             column(3, 
+                                    helpText("Scree plots; the left panel shows the plot of eigenvalues and 
+                                             the right panel shows the cumulative percent variance explained."), 
+                                    br(), br(), downloadButton('downloadPlotScree', 'Download Plot')
                                     ),
                              column(9, h4("Scree Plots"), 
                                     plotOutput('Scree')
@@ -88,12 +87,9 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                     tabPanel("Linear Combinations",
                              withMathJax(),
                              column(3,
-                                      h4("FPC Score Values"),
-                                      eval(calls),
-                                      hr(),
-                                      helpText("Sliders indicate FPC score values in SDs of the score distribution; plot shows the linear 
-                                             combination of mean and FPCs with the specified scores."), br(),
-                                      downloadButton('downloadPlotLinCom', 'Download Plot')
+                                    helpText("Plot shows the linear combination of mean and FPCs with the scores specified using the sliders below."), hr(),
+                                    eval(calls),
+                                    br(), br(), downloadButton('downloadPlotLinCom', 'Download Plot')
                                     ),
                              column(9, h4("Linear Combination of Mean and FPCs"), 
                                       plotOutput('LinCom')
@@ -101,11 +97,9 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              ),
                     tabPanel("Subject Fits",
                              column(3,
-                                      selectInput("subject", label = h4("Select Subject"), choices = 1:dim(fpca.obj$Yhat)[1], selected =1),
-                                      hr(),
-                                      helpText("Use the drop down menu to select a subject. Plot shows observed data and fitted values 
-                                               for the selected subject."), br(),
-                                      downloadButton('downloadPlotSubject', 'Download Plot')
+                                    helpText("Plot shows observed data and fitted values for the subject selected below"), 
+                                    selectInput("subject", label = ("Select Subject"), choices = 1:dim(fpca.obj$Yhat)[1], selected =1),
+                                    br(), br(), downloadButton('downloadPlotSubject', 'Download Plot')
                                     ),
                              column(9, h4("Fitted and Observed Values for Selected Subject"),
                                       plotOutput("Subject")
@@ -113,12 +107,12 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                              ),
                     tabPanel("Score Scatterplot",
                              fluidRow(
-                             column(3, selectInput("PCX", label = h4("Select X-axis FPC"), choices = 1:fpca.obj$npc, selected = 1), hr(),
-                                    selectInput("PCY", label = h4("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2),
-                                    helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
-                                             distrbution for selected FPCs."), br()
+                             column(3, helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
+                                             scatterplot for selected FPCs; click and drag on the scatterplot to select subjects."), hr(),
+                                    selectInput("PCX", label = ("Select X-axis FPC"), choices = 1:fpca.obj$npc, selected = 1),
+                                    selectInput("PCY", label = ("Select Y-axis FPC"), choices = 1:fpca.obj$npc, selected = 2)
                                     ),
-                             column(9, h4("Score Distribution for Selected FPCs"),
+                             column(9, h4("Score Scatterplot for Selected FPCs"),
                                       plotOutput("ScorePlot",
                                                  brush=brushOpts(
                                                    id = "ScorePlot_brush",
@@ -126,10 +120,10 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                                  )
                                     )),
                              fluidRow(
-                               column(3, br(),hr(), helpText("Black curves are fitted values for all subjects. Blue curves correspond to points 
-                                                  selected in graph above. If no points are selected then mean curve is shown.")
+                               column(3, helpText("Black curves are fitted values for all subjects. Blue curves correspond to subjects 
+                                                  selected in the graph above. If no points are selected, the mean curve is shown.")
                                       ),
-                               column(9, h4("Curves corresponding to selected points"),
+                               column(9,
                                       plotOutput("ScorePlot2")
                                       )
                                )
@@ -267,7 +261,8 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
       ### second score plot
       Yhat.all.m = melt(fpca.obj$Yhat)
       colnames(Yhat.all.m) = c("subj", "time", "value")   
-      baseplot = ggplot(Yhat.all.m, aes(x=time, y=value, group = subj)) + geom_line(alpha = 1/5, color="black")+theme_bw()
+      baseplot = ggplot(Yhat.all.m, aes(x=time, y=value, group = subj)) + geom_line(alpha = 1/5, color="black") + 
+        xlab(xlab) + ylab(ylab) + theme_bw()
       
       output$ScorePlot2 <- renderPlot({
    

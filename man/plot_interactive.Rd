@@ -39,6 +39,15 @@ plot_interactive(fosr.dti1)
 
 fosr.dti2 = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 plot_interactive(fosr.dti2)
+
+
+##### FoSR Example with outliers #####
+
+DTI$cca[1,] = DTI$cca[1,] + .3
+DTI$cca[2,] = DTI$cca[2,] + .3
+
+fosr.dti3 = fosr_gls(cca ~ pasat * gender + status, data = DTI)
+plot_interactive(fosr.dti3)
 }
 \author{
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu},

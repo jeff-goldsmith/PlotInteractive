@@ -4,7 +4,8 @@
 \alias{fosr_gls}
 \title{Cross-sectional FoSR using GLS}
 \usage{
-fosr_gls(formula, data = NULL, Kt = 5, basis = "bs", sigma = NULL)
+fosr_gls(formula, data = NULL, Kt = 5, basis = "bs", sigma = NULL,
+  verbose = FALSE, CI.type = "pointwise")
 }
 \arguments{
 \item{formula}{a formula indicating the structure of the proposed model.}
@@ -22,6 +23,11 @@ b-splines}
 \item{sigma}{optional covariance matrix used in GLS; if \code{NULL}, OLS will be
 used to estimated fixed effects, and the covariance matrix will be estimated from
 the residuals.}
+
+\item{verbose}{logical defaulting to \code{TRUE} -- should updates on progress be printed?}
+
+\item{CI.type}{Indicates CI type for coefficient functions; options are "pointwise" and
+"simultaneous"}
 }
 \description{
 Fitting function for function-on-scalar regression for cross-sectional data.
@@ -45,5 +51,10 @@ fosr.dti = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 }
 \author{
 Jeff Goldsmith \email{ajg2202@cumc.columbia.edu}
+}
+\references{
+Goldsmith, J., Kitago, T. (Under Review).
+Assessing Systematic Effects of Stroke on Motor Control using Hierarchical
+Function-on-Scalar Regression.
 }
 

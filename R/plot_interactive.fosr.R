@@ -76,10 +76,9 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                     collapsible = FALSE, id = "nav",
                     inverse = TRUE, header = NULL,
                     tabPanel("Observed Data", icon = icon("stats", lib = "glyphicon"),
-                             column(3,
-                                    selectInput("CovarChoice", label = h4("Select Covariate"), choices = covarInputValues, selected = 1),
-                                    hr(),
-                                    helpText("Observed response data, colored according to the selected variable.")
+                             column(3, 
+                                    helpText("Observed response data, colored according to the covariate selected below."), hr(),
+                                    selectInput("CovarChoice", label = ("Select Covariate"), choices = covarInputValues, selected = 1)
                                     ),
                              column(9, h4("Observed Data"), 
                                     plotOutput('ObsDataPlot')
@@ -87,30 +86,28 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                             ),
                     tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
                              column(3,
-                                    h4("Predictor Values"),
-                                    eval(calls),
-                                    hr(),
-                                    helpText("Use inputs to select predictor values; a fitted response curve for a subject with those values is
-                                             plotted to the right.")
+                                    helpText("Fitted response curve for a subject with covariate values specified below."), hr(),
+                                    eval(calls)
                                    ),
-                             column(9, h4("Fitted Value"), 
+                             column(9, h4("Fitted Response Curve"), 
                                    plotOutput('FittedValPlot')
                                    )
                             ),
                     tabPanel("Coefficient Functions",
-                             column(3, selectInput("CoefChoice", label = h4("Select Coefficient"), choices = coefInputValues, selected = 1),
-                                    hr(),
-                                    helpText("Coefficient functions and confidence bounds for the selected predictor.")
+                             column(3, 
+                                    helpText("Coefficient function and confidence bounds for the predictor selected below"), hr(),
+                                    selectInput("CoefChoice", label = ("Select Predictor"), choices = coefInputValues, selected = 1)
                                     ),
                              column(9, h4("Coefficient Function"), 
                                     plotOutput('CoefFunc')
                                     )     
                             ),
                     tabPanel("Residuals", icon = icon("medkit"),
-                             column(3, h4("Show Outliers"), checkboxInput("outliers", label="Show median and outliers"),
-                                    hr(),
-                                    helpText("Plot of residual curves. If box is checked then median and any outliers are shown 
-                                             in blue and red, respectively.")
+                             column(3, 
+                                    helpText("Plot of residual curves."), hr(),
+                                    checkboxInput("outliers", label="Show median and outliers"),
+                                    helpText("If box is checked, the median and outlying residuals are shown 
+                                             in blue and red respectively.")
                                     ),
                              column(9, h4("Residuals"), 
                                     plotOutput('resid')
@@ -150,7 +147,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
             theme_bw() + xlab("") + ylab("") 
         } else {
           ggplot(dataInputObsData(), aes(x=grid, y=value, group = subj, color = covariate)) + geom_line(alpha = .3) +
-            theme_bw() + xlab("") + ylab("") +theme(legend.position="bottom", legend.title=element_blank())
+            theme_bw() + xlab("") + ylab("") + theme(legend.position="bottom", legend.title=element_blank())
         }
       )
       
