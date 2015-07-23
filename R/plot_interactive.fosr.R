@@ -84,7 +84,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                     plotOutput('ObsDataPlot')
                                     )
                             ),
-                    tabPanel("Fitted Values", icon = icon("stats", lib = "glyphicon"),
+                    tabPanel("Fitted Values", icon = icon("line-chart"),
                              column(3,
                                     helpText("Fitted response curve for a subject with covariate values specified below."), hr(),
                                     eval(calls)
@@ -93,7 +93,7 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                    plotOutput('FittedValPlot')
                                    )
                             ),
-                    tabPanel("Coefficient Functions",
+                    tabPanel("Coefficient Functions", icon = icon("area-chart"),
                              column(3, 
                                     helpText("Coefficient function and confidence bounds for the predictor selected below"), hr(),
                                     selectInput("CoefChoice", label = ("Select Predictor"), choices = coefInputValues, selected = 1)
@@ -105,9 +105,13 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                     tabPanel("Residuals", icon = icon("medkit"),
                              column(3, 
                                     helpText("Plot of residual curves."), hr(),
-                                    checkboxInput("outliers", label="Show median and outliers"),
-                                    helpText("If box is checked, the median and outlying residuals are shown 
-                                             in blue and red respectively.")
+                                    #checkboxInput("outliers", label="Show median and outliers"),
+                                    radioButtons("residOptions", label="Plot Options", 
+                                                 choices = list("None"=1, "Show Median and Outliers"=2,"Rainbowize by Depth"=3), 
+                                                 selected=1),
+                                    helpText("If'Show Outliers' is selected, the median and outlying curves are shown 
+                                             in blue and red respectively. If rainbowize is selected, curves are ordered by band depth,
+                                             with most outlying curves shown in red and curves closest to the median shown in violet")
                                     ),
                              column(9, h4("Residuals"), 
                                     plotOutput('resid')
@@ -214,33 +218,43 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
       response = fosr.obj$data[,names(attributes(terms(fosr.obj$terms))$dataClasses)[1]]
       resid = response - fosr.obj$Yhat
       colnames(resid) = grid
+      outs = outliers(resid, 1.5) # detects outliers
       resid.m = melt(resid)
       colnames(resid.m) = c("subj", "grid", "residual")
-    
-      outs = outliers(resid, 1.5) 
+      resid.m = resid.m[order(resid.m$subj),]
+      resid.m$depths = rep(outs$depth, each = dim(resid)[2])
+      resid.m = resid.m[order(resid.m$depths, decreasing = FALSE),]
+      resid.m$depth.rank = rep(1:dim(resid)[1], each=dim(resid)[2])
+      
+      
+      # residuals for outliers
+
       resid.outs.m = melt(outs$outcurves)
       colnames(resid.outs.m) = c("subj", "grid", "residual")
       
+      # residuals for median curve
       resid.med.m = melt(outs$medcurve)
       colnames(resid.med.m) = c("subj", "grid", "residual")
       
        plotInputResid <- reactive({
-        residPlot = ggplot(resid.m, aes(x=grid, y=residual, group = subj)) + geom_line(alpha = .3, color="black") 
+        residPlot = ggplot(resid.m, aes(x=grid, y=residual, group = subj))+ theme_bw() + geom_line(alpha = .3, color="black") 
         
-        if(input$outliers==TRUE & dim(outs$outcurves)[1]!= 0){residPlot=residPlot+
+        if(input$residOptions==2 & dim(outs$outcurves)[1]!= 0){residPlot=residPlot+
                                    geom_line(data=resid.outs.m, aes(x=grid, y=residual, group=subj, color="outliers"))+
                                    geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj, color = "median"))+
                                    scale_colour_manual("", values = c("outliers"="red", "median"="blue"), guide = FALSE)
                                    #theme(legend.position="bottom")
                                    
         } 
-        else if(input$outliers==TRUE & dim(outs$outcurves)[1]== 0){residPlot=residPlot+
+        else if(input$residOptions==2 & dim(outs$outcurves)[1]== 0){residPlot=residPlot+
                                    geom_line(data=resid.med.m, aes(x=grid, y=residual, group=subj, color = "median"))+
                                    scale_colour_manual("", values = c("median"="blue"), guide=FALSE)
                                                               
         } 
         
-        residPlot + theme_bw() + xlab("") + ylab("")
+        else if (input$residOptions == 3){residPlot = ggplot(resid.m, aes(x=grid, y=residual, group = subj)) +
+                                             geom_line(aes(color=factor(depth.rank))) + theme_bw()+ theme(legend.position="none")}
+        residPlot  + xlab("") + ylab("")
       })   
       
       

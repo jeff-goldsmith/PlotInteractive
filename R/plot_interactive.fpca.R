@@ -84,7 +84,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                     plotOutput('Scree')
                                     )     
                             ),
-                    tabPanel("Linear Combinations",
+                    tabPanel("Linear Combinations", icon = icon("line-chart"),
                              withMathJax(),
                              column(3,
                                     helpText("Plot shows the linear combination of mean and FPCs with the scores specified using the sliders below."), hr(),
@@ -95,7 +95,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       plotOutput('LinCom')
                                     )
                              ),
-                    tabPanel("Subject Fits",
+                    tabPanel("Subject Fits",  icon = icon("user"),
                              column(3,
                                     helpText("Plot shows observed data and fitted values for the subject selected below"), 
                                     selectInput("subject", label = ("Select Subject"), choices = 1:dim(fpca.obj$Yhat)[1], selected =1),
@@ -105,7 +105,7 @@ plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
                                       plotOutput("Subject")
                                     )
                              ),
-                    tabPanel("Score Scatterplot",
+                    tabPanel("Score Scatterplot",icon = icon("binoculars"),
                              fluidRow(
                              column(3, helpText("Use the drop down menus to select FPCs for the X and Y axis. Plot shows observed score
                                              scatterplot for selected FPCs; click and drag on the scatterplot to select subjects."), hr(),
