@@ -109,8 +109,8 @@ plot_interactive.fosr = function(fosr.obj, xlab = "", ylab="", title = "") {
                                     radioButtons("residOptions", label="Plot Options", 
                                                  choices = list("None"=1, "Show Median and Outliers"=2,"Rainbowize by Depth"=3), 
                                                  selected=1),
-                                    helpText("If'Show Outliers' is selected, the median and outlying curves are shown 
-                                             in blue and red respectively. If rainbowize is selected, curves are ordered by band depth,
+                                    helpText("If 'Show Outliers' is selected, the median and outlying curves are shown 
+                                             in blue and red respectively. If 'Rainbowize' is selected, curves are ordered by band depth
                                              with most outlying curves shown in red and curves closest to the median shown in violet")
                                     ),
                              column(9, h4("Residuals"), 
