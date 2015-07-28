@@ -11,17 +11,10 @@
 #' @author Julia Wrobel \email{jw3134@@cumc.columbia.edu},
 #' Jeff Goldsmith \email{jeff.goldsmith@@columbia.edu} 
 #' 
-#' @seealso \code{\link{plot.interactive}}
+#' @seealso \code{\link{plot_interactive}}
 #' @import shiny
 #' @import ggplot2
 #' @export
-#' 
-#' @examples
-#' 
-#' library(refund)
-#' data(cd4)
-#' fpca.cd4 = fpca(cd4, var=TRUE)
-#' plot_interactive(fpca.cd4)
 #' 
 plot_interactive.fpca = function(fpca.obj, xlab = "", ylab="", title = "") {
     

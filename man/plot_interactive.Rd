@@ -12,18 +12,58 @@ plot_interactive(x, ...)
 \item{...}{additional arguments passed to plotting functions}
 }
 \description{
-Generic function for interactive plotting of functional data analysis results
+Function for interactive plotting of functional data analysis results.
+}
+\details{
+This package builds on the \code{refund} package: tools in \code{refund} are used to
+conduct analyses and functions in this package create interactive visualizations of the results
+of those analyses. There are two major categories of analyses that can be viewed:
+\enumerate{
+\item{Functional principal componenents analyses implemented by \code{\link{fpca.sc}}, \code{\link{fpca.face}},
+\code{\link{fpca.ssvd}}, and \code{\link{fpca2}}. Plots show the mean +/- 2SD times each FPC; scree plots;
+linear combinations of score values and FPCs; reconstructions for each subject; and score scatterplots.}
+\item{Function-on-scalar regression analyses implemented by \code{\link{bayes_fosr}}. Plots show the raw data
+colored by covariate values; fitted values depending on covariates; coefficient functions; and residuals.}
+}
 }
 \examples{
+\dontrun{
+
 library(refund)
 library(dplyr)
 
-
-##### FPCA Example #####
+##### FPCA Example on real data #####
 
 data(cd4)
-fpca.cd4 = fpca(cd4, var=TRUE)
-plot_interactive(fpca.cd4)
+SC = fpca.sc(cd4)
+plot_interactive(SC)
+
+##### FPCA Examples on simulated data #####
+
+set.seed(2678695)
+n = 101
+m = 101
+s1 = 20
+s2 = 10
+s = 4
+t = seq(-1, 1, l=m)
+v1 = t + sin(pi*t)
+v2 = cos(3*pi*t)
+V = cbind(v1/sqrt(sum(v1^2)), v2/sqrt(sum(v2^2)))
+U = matrix(rnorm(n*2), n, 2)
+D = diag(c(s1^2, s2^2))
+eps = matrix(rnorm(m*n, sd=s), n, m)
+Y = U\%*\%D\%*\%t(V) + eps
+
+SC = fpca.sc(Y)
+FACE = fpca.face(Y)
+SSVD = fpca.ssvd(Y, verbose=FALSE)
+S = fpca2s(Y)
+
+plot_interactive(SC)
+plot_interactive(FACE)
+plot_interactive(SSVD)
+plot_interactive(S)
 
 
 ##### FoSR Example #####
@@ -48,12 +88,14 @@ DTI$cca[2,] = DTI$cca[2,] + .4
 
 fosr.dti3 = fosr_gls(cca ~ pasat * gender + status, data = DTI)
 plot_interactive(fosr.dti3)
+
+}
 }
 \author{
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu},
 Julia Wrobel \email{jw3134@cumc.columbia.edu}
 }
 \seealso{
-\code{\link{plot.interactive.fpca}}
+\code{\link{plot_interactive.fpca}}, \code{\link{plot_interactive.fosr}}
 }
 

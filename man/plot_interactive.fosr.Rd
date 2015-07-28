@@ -20,27 +20,11 @@
 Produces an interactive plot illustrating a function-on-scalar
 regression analysis.
 }
-\examples{
-library(refund)
-library(dplyr)
-
-set.seed(101)
-
-data(DTI)
-DTI = subset(DTI, select = c(cca, case, pasat))
-DTI = DTI[complete.cases(DTI),]
-DTI$gender = sample(c(0,1), dim(DTI)[1], replace = TRUE)
-DTI$status = factor(sample(c("RRMS", "SPMS", "PPMS"), dim(DTI)[1], replace = TRUE))
-
-fosr.dti = fosr_gls(cca ~ pasat + gender, data = DTI)
-
-plot_interactive(fosr.dti)
-}
 \author{
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu},
 Julia Wrobel \email{jw3134@cumc.columbia.edu}
 }
 \seealso{
-\code{\link{plot.interactive}}
+\code{\link{plot_interactive}}
 }
 

@@ -20,17 +20,11 @@
 Produces an interactive plot illustrating a functional principal component
 analysis.
 }
-\examples{
-library(refund)
-data(cd4)
-fpca.cd4 = fpca(cd4, var=TRUE)
-plot_interactive(fpca.cd4)
-}
 \author{
 Julia Wrobel \email{jw3134@cumc.columbia.edu},
 Jeff Goldsmith \email{jeff.goldsmith@columbia.edu}
 }
 \seealso{
-\code{\link{plot.interactive}}
+\code{\link{plot_interactive}}
 }
 
