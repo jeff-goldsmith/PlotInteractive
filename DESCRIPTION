@@ -11,6 +11,7 @@ Imports:
     mgcv,
     pbs,
     shiny (>= 0.11),
-    splines    
+    splines,
+    reshape
 License: GPL (>= 2)
 LazyData: true
